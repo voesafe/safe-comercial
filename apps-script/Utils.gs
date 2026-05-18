@@ -82,7 +82,7 @@ function linhaParaVenda(row) {
     pac:         row[2],
     nome:        row[3],
     sexo:        row[4],
-    idade:       row[5],
+    nascimento:  row[5],
     cidade:      row[6],
     estado:      row[7],
     origem:      row[8],

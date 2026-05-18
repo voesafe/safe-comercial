@@ -6,10 +6,6 @@
 //         Tipo: App da Web | Executar como: Eu | Acesso: Qualquer pessoa
 // ============================================================
 
-/**
- * GET — para leitura de dados
- * Parâmetros via URL: ?action=...&pac=...&perfil=...&mes=...&ano=...
- */
 function doGet(e) {
   try {
     var p = e.parameter;
@@ -22,34 +18,28 @@ function doGet(e) {
 
     switch (action) {
 
-      // Dashboard KPIs
+      // Admin vê todos (null = sem filtro de PAC); PAC vê só os próprios
       case 'kpis':
-        return jsonSuccess(calcularKPIs(pac, perfil, mes, ano));
+        return jsonSuccess(calcularKPIs(perfil === 'admin' ? null : pac, perfil, mes, ano));
 
-      // Lista de vendas
       case 'vendas':
         var filtPac = perfil === 'admin' ? null : pac;
         return jsonSuccess(listarVendas(filtPac, mes, ano));
 
-      // Venda específica
       case 'venda':
         if (!id) return jsonError('ID obrigatório');
         return jsonSuccess(buscarVenda(id));
 
-      // Faturamento (admin)
       case 'faturamento':
         return jsonSuccess(listarFaturamento(mes, ano));
 
-      // Resumo faturamento anual (admin)
       case 'faturamento-resumo':
         return jsonSuccess(resumoFaturamento(ano));
 
-      // Lista usuários (admin)
       case 'usuarios':
         if (perfil !== 'admin') return jsonError('Acesso negado');
         return jsonSuccess(listarUsuarios());
 
-      // Canais disponíveis
       case 'canais':
         return jsonSuccess(CANAIS);
 
@@ -62,10 +52,6 @@ function doGet(e) {
   }
 }
 
-/**
- * POST — para escrita, edição e autenticação
- * Body JSON: { action, dados, pac, perfil, ... }
- */
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
@@ -76,7 +62,6 @@ function doPost(e) {
 
     switch (action) {
 
-      // ── Autenticação ─────────────────────────────────────
       case 'login':
         var usuario = login(dados.pac, dados.senha);
         if (!usuario) return jsonError('PAC ou senha incorretos');
@@ -87,9 +72,7 @@ function doPost(e) {
         if (!ok) return jsonError('Senha atual incorreta');
         return jsonSuccess({ mensagem: 'Senha alterada com sucesso' });
 
-      // ── Vendas ───────────────────────────────────────────
       case 'criar-venda':
-        // PAC só pode criar venda para si mesmo
         if (perfil !== 'admin') dados.pac = pac;
         return jsonSuccess(criarVenda(dados));
 
@@ -99,12 +82,10 @@ function doPost(e) {
         if (!atualizado) return jsonError('Venda não encontrada');
         return jsonSuccess({ mensagem: 'Venda atualizada' });
 
-      // ── Faturamento (admin) ───────────────────────────────
       case 'salvar-faturamento':
         if (perfil !== 'admin') return jsonError('Acesso negado');
         return jsonSuccess(salvarFaturamento(dados.mes, dados.ano, dados.canal, dados.valor));
 
-      // ── Usuários (admin) ──────────────────────────────────
       case 'criar-usuario':
         if (perfil !== 'admin') return jsonError('Acesso negado');
         return jsonSuccess(criarUsuario(dados));

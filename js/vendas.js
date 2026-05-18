@@ -37,39 +37,24 @@ const Vendas = {
       });
     }
 
-    // Busca local
     document.getElementById('busca')?.addEventListener('input', e => {
       this.renderTabela(e.target.value);
     });
   },
 
   initForm() {
-    // Botão nova venda
     document.getElementById('btn-nova-venda')?.addEventListener('click', () => {
       this.abrirForm();
     });
-
-    // Fechar modal
     document.getElementById('modal-close')?.addEventListener('click', () => {
       fecharModal('modal-venda');
     });
     document.getElementById('modal-cancelar')?.addEventListener('click', () => {
       fecharModal('modal-venda');
     });
-
-    // Salvar
     document.getElementById('btn-salvar')?.addEventListener('click', () => {
       this.salvar();
     });
-
-    // PAC: se não é admin, trava o campo PAC
-    if (!Auth.eAdmin()) {
-      const campoPac = document.getElementById('f-pac');
-      if (campoPac) {
-        campoPac.value    = Auth.getPac();
-        campoPac.disabled = true;
-      }
-    }
   },
 
   async carregar() {
@@ -94,7 +79,6 @@ const Vendas = {
 
     let lista = this.dados;
 
-    // Filtro de busca local
     if (busca.trim()) {
       const q = busca.toLowerCase();
       lista = lista.filter(v =>
@@ -107,26 +91,24 @@ const Vendas = {
 
     if (!lista.length) {
       tbody.innerHTML = `
-        <tr>
-          <td colspan="8">
-            <div class="empty-state">
-              <div class="icon">◎</div>
-              <p>Nenhuma venda encontrada</p>
-            </div>
-          </td>
-        </tr>`;
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <div class="icon">◎</div>
+            <p>Nenhuma venda encontrada</p>
+          </div>
+        </td></tr>`;
       return;
     }
 
     tbody.innerHTML = lista.map(v => `
       <tr>
-        <td>${formatData(v.data)}</td>
+        <td style="white-space:nowrap">${formatData(v.data)}</td>
         ${Auth.eAdmin() ? `<td><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.nome}">${v.nome || '—'}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.curso}">${v.curso || '—'}</td>
-        <td>${v.origem || '—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.nome}">${v.nome || '—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.curso}">${v.curso || '—'}</td>
+        <td style="white-space:nowrap">${v.origem || '—'}</td>
         <td><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
-        <td style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(v.valor)}</td>
+        <td style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
         <td>
           <button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>
         </td>
@@ -143,48 +125,45 @@ const Vendas = {
   abrirForm(venda = null) {
     this.editandoId = venda ? venda.id : null;
 
-    // Título do modal
     document.getElementById('modal-titulo').textContent =
       venda ? 'Editar Venda' : 'Nova Venda';
 
-    // Preenche ou limpa campos
-    const campos = ['data','pac','nome','sexo','idade','cidade','estado','origem','curso','email','valor','lead-novo','quem-comprou'];
-    campos.forEach(c => {
-      const el = document.getElementById('f-' + c);
-      if (!el) return;
-      if (venda) {
-        el.value = venda[c.replace('-','').replace('lead','leadNovo').replace('quem','quemComprou')] || '';
-      } else {
-        el.value = '';
-      }
-    });
-
-    // Preenche campos com mapeamento correto
     if (venda) {
-      document.getElementById('f-data').value        = venda.data        || '';
-      document.getElementById('f-pac').value         = venda.pac         || '';
-      document.getElementById('f-nome').value        = venda.nome        || '';
-      document.getElementById('f-sexo').value        = venda.sexo        || '';
-      document.getElementById('f-idade').value       = venda.idade       || '';
-      document.getElementById('f-cidade').value      = venda.cidade      || '';
-      document.getElementById('f-estado').value      = venda.estado      || '';
-      document.getElementById('f-origem').value      = venda.origem      || '';
-      document.getElementById('f-curso').value       = venda.curso       || '';
-      document.getElementById('f-email').value       = venda.email       || '';
-      document.getElementById('f-valor').value       = venda.valor       || '';
-      document.getElementById('f-lead-novo').value   = venda.leadNovo    || 'Não';
-      document.getElementById('f-quem-comprou').value= venda.quemComprou || '';
+      document.getElementById('f-data').value         = venda.data        || '';
+      document.getElementById('f-pac').value          = venda.pac         || '';
+      document.getElementById('f-nome').value         = venda.nome        || '';
+      document.getElementById('f-sexo').value         = venda.sexo        || '';
+      document.getElementById('f-nascimento').value   = venda.nascimento  || venda.idade || '';
+      document.getElementById('f-cidade').value       = venda.cidade      || '';
+      document.getElementById('f-estado').value       = venda.estado      || '';
+      document.getElementById('f-origem').value       = venda.origem      || '';
+      document.getElementById('f-curso').value        = venda.curso       || '';
+      document.getElementById('f-email').value        = venda.email       || '';
+      document.getElementById('f-valor').value        = venda.valor       || '';
+      document.getElementById('f-lead-novo').value    = venda.leadNovo    || 'Não';
+      document.getElementById('f-quem-comprou').value = venda.quemComprou || '';
     } else {
-      // Data padrão = hoje
-      document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
-      if (!Auth.eAdmin()) {
-        document.getElementById('f-pac').value = Auth.getPac();
-      }
+      document.getElementById('f-data').value         = new Date().toISOString().split('T')[0];
+      document.getElementById('f-pac').value          = Auth.eAdmin() ? 'Thiago' : Auth.getPac();
+      document.getElementById('f-nome').value         = '';
+      document.getElementById('f-sexo').value         = '';
+      document.getElementById('f-nascimento').value   = '';
+      document.getElementById('f-cidade').value       = '';
+      document.getElementById('f-estado').value       = '';
+      document.getElementById('f-origem').value       = '';
+      document.getElementById('f-curso').value        = '';
+      document.getElementById('f-email').value        = '';
+      document.getElementById('f-valor').value        = '';
+      document.getElementById('f-lead-novo').value    = 'Não';
+      document.getElementById('f-quem-comprou').value = '';
     }
 
-    // Trava campo PAC para PACs
+    // PAC travado para não-admin
     const campoPac = document.getElementById('f-pac');
-    if (campoPac) campoPac.disabled = !Auth.eAdmin();
+    if (campoPac) {
+      campoPac.disabled = !Auth.eAdmin();
+      if (!Auth.eAdmin()) campoPac.value = Auth.getPac();
+    }
 
     abrirModal('modal-venda');
   },
@@ -201,10 +180,12 @@ const Vendas = {
     const dados = {
       id:          this.editandoId,
       data:        document.getElementById('f-data').value,
-      pac:         document.getElementById('f-pac').value || Auth.getPac(),
+      pac:         Auth.eAdmin()
+                     ? document.getElementById('f-pac').value
+                     : Auth.getPac(),
       nome:        document.getElementById('f-nome').value,
       sexo:        document.getElementById('f-sexo').value,
-      idade:       document.getElementById('f-idade').value,
+      nascimento:  document.getElementById('f-nascimento').value,
       cidade:      document.getElementById('f-cidade').value,
       estado:      document.getElementById('f-estado').value,
       origem:      document.getElementById('f-origem').value,
@@ -215,9 +196,8 @@ const Vendas = {
       quemComprou: document.getElementById('f-quem-comprou').value
     };
 
-    // Validação básica
-    if (!dados.data || !dados.nome || !dados.valor) {
-      toast('Data, nome e valor são obrigatórios.', 'warning');
+    if (!dados.data || !dados.nome || !dados.valor || !dados.curso) {
+      toast('Data, nome, curso e valor são obrigatórios.', 'warning');
       btnLoading(btn, false);
       return;
     }

@@ -17,7 +17,7 @@ const crypto  = require('crypto');
 
 // ── Configuração ─────────────────────────────────────────────
 // Cole aqui a mesma URL do Apps Script que está no config.js
-const API_URL = 'https://script.google.com/macros/s/AKfycbzmaCBkPawFNplB5bmeroYC2DrvsOumnzfKvt7zk3IjSrzp5jBlgFP-p2TU4EW29QmE/exec';
+const API_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
 
 // Credenciais de admin para autenticar as chamadas
 const ADMIN_PAC    = 'Thiago';

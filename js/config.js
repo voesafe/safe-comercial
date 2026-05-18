@@ -4,7 +4,6 @@
 // ============================================================
 
 const CONFIG = {
-  // ← Cole aqui a URL do seu Apps Script após o deploy
   API_URL: 'https://script.google.com/macros/s/AKfycbzmaCBkPawFNplB5bmeroYC2DrvsOumnzfKvt7zk3IjSrzp5jBlgFP-p2TU4EW29QmE/exec',
 
   APP_NAME:    'SAFE Comercial',
@@ -28,6 +27,19 @@ const CONFIG = {
     'WhatsApp', 'Outros'
   ],
 
+  CURSOS: [
+    'Piloto Privado Teórico',
+    'Piloto Privado Prático',
+    'Piloto Comercial/IFR Prático',
+    'Piloto Comercial Teórico',
+    'Piloto Comercial/IFR MLTE',
+    'INVA Teórico',
+    'INVA Prático',
+    'Aperfeiçoamento Contínuo',
+    'Adaptação de Instrutor Externo',
+    'SAFE Pilot Academy'
+  ],
+
   CANAIS_FATURAMENTO: [
     'Lojinha', 'Safe Academy', 'Azul Pontos',
     'Lito Academy', 'Vendas Comercial'
@@ -36,6 +48,5 @@ const CONFIG = {
   SESSION_KEY: 'safe_session'
 };
 
-// Ano atual para filtros
 CONFIG.ANO_ATUAL = new Date().getFullYear();
 CONFIG.MES_ATUAL = new Date().getMonth() + 1;

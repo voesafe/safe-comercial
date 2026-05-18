@@ -11,8 +11,6 @@
 <body>
 
 <div class="app-shell">
-
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <img src="assets/img/logo.png" alt="SAFE">
@@ -25,26 +23,21 @@
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
       <a href="dashboard.html" class="nav-item">
-        <span class="nav-icon">◈</span>
-        <span class="nav-label">Dashboard</span>
+        <span class="nav-icon">◈</span><span class="nav-label">Dashboard</span>
       </a>
       <a href="vendas.html" class="nav-item active">
-        <span class="nav-icon">◎</span>
-        <span class="nav-label">Vendas</span>
+        <span class="nav-icon">◎</span><span class="nav-label">Vendas</span>
       </a>
       <hr class="nav-divider" data-admin-only>
       <div class="nav-section-label" data-admin-only>Administração</div>
       <a href="faturamento.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◉</span>
-        <span class="nav-label">Faturamento</span>
+        <span class="nav-icon">◉</span><span class="nav-label">Faturamento</span>
       </a>
       <a href="concorrencia.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◐</span>
-        <span class="nav-label">Concorrência</span>
+        <span class="nav-icon">◐</span><span class="nav-label">Concorrência</span>
       </a>
       <a href="admin.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◑</span>
-        <span class="nav-label">Usuários</span>
+        <span class="nav-icon">◑</span><span class="nav-label">Usuários</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -61,8 +54,6 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <main class="main" id="main">
-
-    <!-- Topbar -->
     <div class="topbar">
       <div class="topbar-left">
         <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
@@ -91,20 +82,14 @@
       </div>
     </div>
 
-    <!-- Conteúdo -->
     <div class="page">
       <div class="card">
         <div class="card-header">
           <div class="card-title">Registro de Vendas</div>
-          <input
-            type="text"
-            id="busca"
-            class="form-control"
+          <input type="text" id="busca" class="form-control"
             placeholder="Buscar por nome, curso, email..."
-            style="max-width:280px"
-          >
+            style="max-width:280px">
         </div>
-
         <div class="table-wrapper">
           <table class="table">
             <thead>
@@ -126,7 +111,6 @@
         </div>
       </div>
     </div>
-
   </main>
 </div>
 
@@ -141,7 +125,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Data *</label>
+          <label class="form-label">Data da Venda *</label>
           <input type="date" class="form-control" id="f-data">
         </div>
         <div class="form-group">
@@ -169,8 +153,8 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Idade</label>
-          <input type="number" class="form-control" id="f-idade" placeholder="Anos" min="0" max="120">
+          <label class="form-label">Data de Nascimento</label>
+          <input type="date" class="form-control" id="f-nascimento">
         </div>
       </div>
 
@@ -207,7 +191,19 @@
 
       <div class="form-group">
         <label class="form-label">Curso / Produto Comprado *</label>
-        <input type="text" class="form-control" id="f-curso" placeholder="Ex: PP Completo, Pacote 20h...">
+        <select class="form-control" id="f-curso">
+          <option value="">Selecione o curso</option>
+          <option>Piloto Privado Teórico</option>
+          <option>Piloto Privado Prático</option>
+          <option>Piloto Comercial/IFR Prático</option>
+          <option>Piloto Comercial Teórico</option>
+          <option>Piloto Comercial/IFR MLTE</option>
+          <option>INVA Teórico</option>
+          <option>INVA Prático</option>
+          <option>Aperfeiçoamento Contínuo</option>
+          <option>Adaptação de Instrutor Externo</option>
+          <option>SAFE Pilot Academy</option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -256,7 +252,6 @@
 <script src="js/auth.js"></script>
 <script src="js/vendas.js"></script>
 <script>
-  // Esconde coluna PAC para não-admin após auth.preencherUI
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       if (!Auth.eAdmin()) {
