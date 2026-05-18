@@ -41,6 +41,31 @@ function jsonError(msg) {
 }
 
 /**
+ * Normaliza valores de perfil para comparações consistentes
+ */
+function normalizarPerfil(perfil) {
+  return String(perfil || '').trim().toLowerCase().replace(/-/g, '_');
+}
+
+function perfilEhAdmin(perfil) {
+  var p = normalizarPerfil(perfil);
+  return p === 'admin' || p === 'admin_readonly' || p === 'admin_visualizacao';
+}
+
+function perfilEhAdminCompleto(perfil) {
+  return normalizarPerfil(perfil) === 'admin';
+}
+
+function perfilSomenteLeitura(perfil) {
+  var p = normalizarPerfil(perfil);
+  return p === 'admin_readonly' || p === 'admin_visualizacao';
+}
+
+function valorBooleano(valor) {
+  return valor === true || valor === 1 || String(valor).trim().toLowerCase() === 'true';
+}
+
+/**
  * Hash SHA-256 simples usando Utilities do Apps Script
  */
 function hashSenha(senha) {

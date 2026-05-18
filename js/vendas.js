@@ -8,15 +8,60 @@ const Vendas = {
   mesFiltro: CONFIG.MES_ATUAL,
   anoFiltro:  CONFIG.ANO_ATUAL,
   dados:     [],
+  pacs:      [],
   editandoId: null,
 
   async init() {
     Auth.proteger();
     Auth.preencherUI();
+    await this.carregarPacs();
     this.initFiltros();
     this.initForm();
     this.initSidebar();
     await this.carregar();
+  },
+
+  async carregarPacs() {
+    const campoPac = document.getElementById('f-pac');
+    if (!campoPac) return;
+
+    const fallback = Array.from(campoPac.options).map(option => ({
+      nome: option.textContent.trim(),
+      pac: option.value,
+      perfil: 'pac'
+    }));
+
+    try {
+      const res = await API.getUsuariosLogin();
+      this.pacs = res.ok && Array.isArray(res.data) && res.data.length
+        ? res.data.filter(u => u.pac && !Auth.perfilSomenteLeitura(u.perfil))
+        : fallback;
+    } catch {
+      this.pacs = fallback;
+    }
+
+    this.preencherSelectPacs();
+  },
+
+  preencherSelectPacs() {
+    const campoPac = document.getElementById('f-pac');
+    if (!campoPac || !this.pacs.length) return;
+
+    const valorAtual = campoPac.value;
+    campoPac.innerHTML = '';
+
+    this.pacs.forEach(usuario => {
+      const option = document.createElement('option');
+      option.value = usuario.pac;
+      option.textContent = usuario.nome && usuario.nome !== usuario.pac
+        ? `${usuario.nome} (${usuario.pac})`
+        : usuario.pac;
+      campoPac.appendChild(option);
+    });
+
+    if (valorAtual && this.pacs.some(usuario => usuario.pac === valorAtual)) {
+      campoPac.value = valorAtual;
+    }
   },
 
   initFiltros() {
@@ -103,14 +148,14 @@ const Vendas = {
 
     tbody.innerHTML = lista.map(v => `
       <tr>
-        <td>${formatData(v.data)}</td>
-        ${Auth.eAdmin() ? `<td class="col-pac"><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
-        <td>${v.nome || '—'}</td>
-        <td class="col-curso">${v.curso || '—'}</td>
-        <td class="col-origem">${v.origem || '—'}</td>
-        <td class="col-lead"><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
-        <td style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
-        <td><button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button></td>
+        <td data-label="Data">${formatData(v.data)}</td>
+        ${Auth.eAdmin() ? `<td class="col-pac" data-label="PAC"><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
+        <td data-label="Cliente">${v.nome || '—'}</td>
+        <td class="col-curso" data-label="Curso">${v.curso || '—'}</td>
+        <td class="col-origem" data-label="Origem">${v.origem || '—'}</td>
+        <td class="col-lead" data-label="Lead Novo"><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
+        <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
+        <td data-label="Ação">${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>` : ''}</td>
       </tr>
     `).join('');
   },
@@ -122,6 +167,11 @@ const Vendas = {
   },
 
   abrirForm(venda = null) {
+    if (!Auth.podeEditar()) {
+      toast('Este acesso é somente leitura.', 'warning');
+      return;
+    }
+
     this.editandoId = venda ? venda.id : null;
 
     document.getElementById('modal-titulo').textContent =
@@ -143,7 +193,9 @@ const Vendas = {
       document.getElementById('f-quem-comprou').value = venda.quemComprou || '';
     } else {
       document.getElementById('f-data').value         = new Date().toISOString().split('T')[0];
-      document.getElementById('f-pac').value          = Auth.eAdmin() ? 'Thiago' : Auth.getPac();
+      document.getElementById('f-pac').value          = Auth.eAdmin()
+        ? (this.pacs[0]?.pac || 'Thiago')
+        : Auth.getPac();
       document.getElementById('f-nome').value         = '';
       document.getElementById('f-sexo').value         = '';
       document.getElementById('f-nascimento').value   = '';
@@ -173,6 +225,11 @@ const Vendas = {
   },
 
   async salvar() {
+    if (!Auth.podeEditar()) {
+      toast('Este acesso é somente leitura.', 'warning');
+      return;
+    }
+
     const btn = document.getElementById('btn-salvar');
     btnLoading(btn, true);
 
@@ -242,9 +299,6 @@ const Vendas = {
     overlay?.addEventListener('click', () => {
       sidebar.classList.remove('mobile-open');
       overlay.classList.remove('active');
-    });
-    document.getElementById('btn-logout')?.addEventListener('click', () => {
-      if (confirm('Deseja sair?')) Auth.logout();
     });
   }
 };

@@ -24,6 +24,21 @@ const Admin = {
     this.renderTabela();
   },
 
+  labelPerfil(perfil) {
+    if (Auth.perfilSomenteLeitura(perfil)) return 'Admin leitura';
+    if (Auth.perfilEhAdmin(perfil)) return 'Admin';
+    return 'Consultor';
+  },
+
+  badgePerfil(perfil) {
+    if (Auth.perfilSomenteLeitura(perfil)) return 'badge-orange';
+    return Auth.perfilEhAdmin(perfil) ? 'badge-navy' : 'badge-teal';
+  },
+
+  estaAtivo(valor) {
+    return valor === true || valor === 1 || String(valor).trim().toLowerCase() === 'true';
+  },
+
   renderTabela() {
     const tbody = document.getElementById('tabela-usuarios');
     if (!tbody) return;
@@ -33,18 +48,21 @@ const Admin = {
       return;
     }
 
-    tbody.innerHTML = this.usuarios.map(u => `
+    tbody.innerHTML = this.usuarios.map(u => {
+      const ativo = this.estaAtivo(u.ativo);
+      return `
       <tr>
         <td style="font-weight:600">${u.nome}</td>
         <td><span class="badge badge-blue">${u.pac}</span></td>
         <td style="color:var(--gray-500);font-size:.85rem">${u.email || '—'}</td>
-        <td><span class="badge ${u.perfil === 'admin' ? 'badge-navy' : 'badge-teal'}">${u.perfil === 'admin' ? 'Admin' : 'Consultor'}</span></td>
-        <td><span class="badge ${u.ativo ? 'badge-green' : 'badge-red'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td><span class="badge ${this.badgePerfil(u.perfil)}">${this.labelPerfil(u.perfil)}</span></td>
+        <td><span class="badge ${ativo ? 'badge-green' : 'badge-red'}">${ativo ? 'Ativo' : 'Inativo'}</span></td>
         <td>
-          <button class="btn btn-ghost btn-sm btn-icon" onclick="Admin.editar('${u.id}')" title="Editar">✎</button>
+          ${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Admin.editar('${u.id}')" title="Editar">✎</button>` : ''}
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   },
 
   initForm() {
@@ -161,9 +179,6 @@ const Admin = {
     overlay?.addEventListener('click', () => {
       sidebar.classList.remove('mobile-open');
       overlay.classList.remove('active');
-    });
-    document.getElementById('btn-logout')?.addEventListener('click', () => {
-      if (confirm('Deseja sair?')) Auth.logout();
     });
   }
 };

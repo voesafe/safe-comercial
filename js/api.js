@@ -139,6 +139,34 @@ const API = {
     return this.get('usuarios', {}, false); // sempre fresco
   },
 
+  async getUsuariosLogin() {
+    const legado = await this.get('usuarios', { pac: 'Thiago', perfil: 'admin' }, false);
+    if (!legado.ok) {
+      return this.get('login-usuarios', {}, false);
+    }
+
+    const ativo = valor =>
+      valor === true ||
+      valor === 1 ||
+      String(valor).trim().toLowerCase() === 'true';
+
+    const porNome = (a, b) =>
+      String(a.nome || a.pac).localeCompare(String(b.nome || b.pac), 'pt-BR');
+
+    // Usa primeiro a rota já publicada, para novos usuários aparecerem agora.
+    return {
+      ok: true,
+      data: (legado.data || [])
+        .filter(usuario => usuario.pac && ativo(usuario.ativo))
+        .map(usuario => ({
+          nome:   usuario.nome,
+          pac:    usuario.pac,
+          perfil: usuario.perfil
+        }))
+        .sort(porNome)
+    };
+  },
+
   async criarUsuario(dados) {
     return this.post('criar-usuario', dados);
   },

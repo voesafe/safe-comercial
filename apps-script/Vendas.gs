@@ -65,10 +65,14 @@ function atualizarVenda(id, dados, pacSolicitante, perfilSolicitante) {
   var sheet = getSheet(SHEETS.VENDAS);
   var data = sheet.getDataRange().getValues();
 
+  if (perfilSomenteLeitura(perfilSolicitante)) {
+    throw new Error('Acesso somente leitura.');
+  }
+
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]) !== String(id)) continue;
 
-    if (perfilSolicitante !== 'admin' &&
+    if (!perfilEhAdminCompleto(perfilSolicitante) &&
         String(data[i][2]).toLowerCase() !== pacSolicitante.toLowerCase()) {
       throw new Error('Sem permissão para editar esta venda.');
     }

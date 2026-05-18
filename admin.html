@@ -53,7 +53,7 @@
         </div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary" id="btn-novo-usuario">+ Novo Usuário</button>
+        <button class="btn btn-primary" id="btn-novo-usuario" data-write-only>+ Novo Usuário</button>
       </div>
     </div>
 
@@ -131,7 +131,8 @@
           <label class="form-label">Perfil</label>
           <select class="form-control" id="u-perfil">
             <option value="pac">Consultor (PAC)</option>
-            <option value="admin">Administrador</option>
+            <option value="admin">Administrador completo</option>
+            <option value="admin_readonly">Administrador somente visualização</option>
           </select>
         </div>
         <div class="form-group">

@@ -78,7 +78,7 @@
             <option value="2026" selected>2026</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="btn-nova-venda">+ Nova Venda</button>
+        <button class="btn btn-primary" id="btn-nova-venda" data-write-only>+ Nova Venda</button>
       </div>
     </div>
 
@@ -91,7 +91,7 @@
             style="max-width:280px">
         </div>
         <div class="table-wrapper">
-          <table class="table">
+          <table class="table table-vendas">
             <thead>
               <tr>
                 <th>Data</th>
@@ -100,7 +100,7 @@
                 <th class="col-curso">Curso</th>
                 <th class="col-origem">Origem</th>
                 <th class="col-lead">Lead Novo</th>
-                <th style="text-align:right">Valor</th>
+                <th class="col-valor" style="text-align:right">Valor</th>
                 <th style="width:48px"></th>
               </tr>
             </thead>

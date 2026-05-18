@@ -20,10 +20,10 @@ function doGet(e) {
 
       // Admin vê todos (null = sem filtro de PAC); PAC vê só os próprios
       case 'kpis':
-        return jsonSuccess(calcularKPIs(perfil === 'admin' ? null : pac, perfil, mes, ano));
+        return jsonSuccess(calcularKPIs(perfilEhAdmin(perfil) ? null : pac, perfil, mes, ano));
 
       case 'vendas':
-        var filtPac = perfil === 'admin' ? null : pac;
+        var filtPac = perfilEhAdmin(perfil) ? null : pac;
         return jsonSuccess(listarVendas(filtPac, mes, ano));
 
       case 'venda':
@@ -37,14 +37,17 @@ function doGet(e) {
         return jsonSuccess(resumoFaturamento(ano));
 
       case 'usuarios':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdmin(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(listarUsuarios());
+
+      case 'login-usuarios':
+        return jsonSuccess(listarUsuariosLogin());
 
       case 'canais':
         return jsonSuccess(CANAIS);
 
       case 'listar-concorrencia':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdmin(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(listarConcorrencia());
 
       default:
@@ -77,41 +80,43 @@ function doPost(e) {
         return jsonSuccess({ mensagem: 'Senha alterada com sucesso' });
 
       case 'criar-venda':
-        if (perfil !== 'admin') dados.pac = pac;
+        if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
+        if (!perfilEhAdminCompleto(perfil)) dados.pac = pac;
         return jsonSuccess(criarVenda(dados));
 
       case 'editar-venda':
+        if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
         if (!dados.id) return jsonError('ID obrigatório');
         var atualizado = atualizarVenda(dados.id, dados, pac, perfil);
         if (!atualizado) return jsonError('Venda não encontrada');
         return jsonSuccess({ mensagem: 'Venda atualizada' });
 
       case 'salvar-faturamento':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(salvarFaturamento(dados.mes, dados.ano, dados.canal, dados.valor));
 
       case 'criar-usuario':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(criarUsuario(dados));
 
       case 'editar-usuario':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         if (!dados.id) return jsonError('ID obrigatório');
         var editado = atualizarUsuario(dados.id, dados);
         if (!editado) return jsonError('Usuário não encontrado');
         return jsonSuccess({ mensagem: 'Usuário atualizado' });
 
       case 'criar-concorrencia':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(criarConcorrencia(dados));
 
       case 'editar-concorrencia':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         if (!dados.id) return jsonError('ID obrigatório');
         return jsonSuccess(editarConcorrencia(dados));
 
       case 'excluir-concorrencia':
-        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         if (!dados.id) return jsonError('ID obrigatório');
         return jsonSuccess(excluirConcorrencia(dados.id));
 

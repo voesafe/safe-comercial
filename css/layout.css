@@ -112,9 +112,19 @@ html, body {
 .nav-item .nav-icon {
   font-size: 1.1rem;
   width: 20px;
+  height: 20px;
   text-align: center;
   flex-shrink: 0;
   color: var(--blue-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-icon svg,
+.sidebar-logout-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 .nav-item.active .nav-icon { color: var(--teal); }
 .nav-item .nav-label {
@@ -139,10 +149,9 @@ html, body {
   gap: 10px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: default;
   transition: var(--transition);
 }
-.sidebar-user:hover { background: rgba(255,255,255,.07); }
 .sidebar-avatar {
   width: 34px; height: 34px;
   border-radius: 50%;
@@ -171,6 +180,42 @@ html, body {
   font-size: .7rem;
   color: rgba(255,255,255,.4);
   white-space: nowrap;
+}
+
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,.65);
+  font-size: .85rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.sidebar-logout:hover {
+  background: rgba(255,255,255,.07);
+  color: var(--white);
+}
+.sidebar-logout-icon {
+  width: 34px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue-light);
+  flex-shrink: 0;
+}
+.sidebar-logout-label {
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity .2s;
+}
+.sidebar.collapsed .sidebar-logout-label {
+  opacity: 0;
+  width: 0;
 }
 
 .sidebar-toggle {
@@ -382,4 +427,101 @@ html, body {
   .topbar-right { flex-direction: column; align-items: flex-start; }
   .topbar-period { width: 100%; }
   .topbar-period select { flex: 1; }
+}
+
+/* ============================================================
+   Vendas: mantém informações completas sem scroll horizontal
+   ============================================================ */
+.table-vendas {
+  table-layout: fixed;
+}
+
+.table-vendas thead th,
+.table-vendas tbody td {
+  overflow: visible;
+  text-overflow: clip;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+
+.table-vendas thead th,
+.table-vendas td:first-child,
+.table-vendas .col-pac,
+.table-vendas .col-origem,
+.table-vendas .col-lead,
+.table-vendas .col-valor,
+.table-vendas td:last-child {
+  white-space: nowrap !important;
+}
+
+.table-vendas .badge {
+  max-width: 100%;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.table.table-vendas thead th:nth-child(1) { width: 9% !important; }
+.table.table-vendas thead th:nth-child(2) { width: auto !important; }
+.table.table-vendas thead th.col-pac { width: 8% !important; }
+.table.table-vendas thead th.col-curso { width: 19% !important; }
+.table.table-vendas thead th.col-origem { width: 12% !important; }
+.table.table-vendas thead th.col-lead { width: 10% !important; }
+.table.table-vendas thead th.col-valor { width: 12% !important; }
+.table.table-vendas thead th:last-child { width: 48px !important; }
+
+@media (max-width: 1100px) {
+  .table.table-vendas thead th.col-curso { width: 17% !important; }
+  .table.table-vendas thead th.col-origem { width: 11% !important; }
+  .table.table-vendas thead th.col-lead { width: 9% !important; }
+}
+
+@media (max-width: 720px) {
+  .table-vendas,
+  .table-vendas tbody,
+  .table-vendas tr,
+  .table-vendas td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-vendas thead {
+    display: none;
+  }
+
+  .table-vendas tbody tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .table-vendas tbody td {
+    display: grid !important;
+    grid-template-columns: minmax(86px, 34%) 1fr;
+    align-items: start;
+    gap: 8px;
+    padding: 7px 0;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .table-vendas tbody td::before {
+    content: attr(data-label);
+    color: var(--gray-500);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .table-vendas tbody td[colspan] {
+    display: block !important;
+  }
+
+  .table-vendas tbody td[colspan]::before,
+  .table-vendas tbody td[data-label="Ação"]:empty {
+    display: none !important;
+    content: none;
+  }
 }

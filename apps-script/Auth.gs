@@ -18,7 +18,7 @@ function login(pac, senha) {
       var rowHash   = String(row[4]).trim();
       var rowAtivo  = row[6];
 
-      if (rowPac === pac.trim().toLowerCase() && rowHash === hash && rowAtivo) {
+      if (rowPac === pac.trim().toLowerCase() && rowHash === hash && valorBooleano(rowAtivo)) {
         return {
           id:     row[0],
           nome:   row[1],
@@ -32,6 +32,31 @@ function login(pac, senha) {
   } catch(e) {
     throw new Error('Erro no login: ' + e.message);
   }
+}
+
+/**
+ * Lista usuários ativos para preencher o seletor de login
+ */
+function listarUsuariosLogin() {
+  var sheet = getSheet(SHEETS.USUARIOS);
+  var data = sheet.getDataRange().getValues();
+  var usuarios = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0] || !valorBooleano(row[6])) continue;
+    usuarios.push({
+      nome:   row[1],
+      pac:    row[2],
+      perfil: row[5]
+    });
+  }
+
+  usuarios.sort(function(a, b) {
+    return String(a.nome || a.pac).localeCompare(String(b.nome || b.pac), 'pt-BR');
+  });
+
+  return usuarios;
 }
 
 /**
@@ -73,7 +98,7 @@ function criarUsuario(dados) {
     dados.email,
     senhaHash,
     dados.perfil || 'pac',
-    true,
+    dados.hasOwnProperty('ativo') ? valorBooleano(dados.ativo) : true,
     new Date()
   ]);
 

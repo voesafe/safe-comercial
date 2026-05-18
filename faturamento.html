@@ -57,7 +57,7 @@
         <div class="topbar-period">
           <select id="sel-ano"><option value="2025">2025</option><option value="2026" selected>2026</option></select>
         </div>
-        <button class="btn btn-primary" id="btn-editar">Lançar Valores</button>
+        <button class="btn btn-primary" id="btn-editar" data-write-only>Lançar Valores</button>
       </div>
     </div>
 
@@ -223,11 +223,20 @@ function renderChartFat(dados) {
 }
 
 document.getElementById('btn-editar')?.addEventListener('click', () => {
+  if (!Auth.podeEditar()) {
+    toast('Este acesso é somente leitura.', 'warning');
+    return;
+  }
   document.getElementById('fat-mes').value = CONFIG.MES_ATUAL;
   abrirModal('modal-fat');
 });
 
 document.getElementById('btn-salvar-fat')?.addEventListener('click', async () => {
+  if (!Auth.podeEditar()) {
+    toast('Este acesso é somente leitura.', 'warning');
+    return;
+  }
+
   const btn = document.getElementById('btn-salvar-fat');
   const mes  = document.getElementById('fat-mes').value;
   const ano  = document.getElementById('fat-ano').value;
@@ -270,10 +279,6 @@ document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-overlay').classList.remove('active');
 });
-document.getElementById('btn-logout')?.addEventListener('click', () => {
-  if (confirm('Deseja sair?')) Auth.logout();
-});
-
 document.addEventListener('DOMContentLoaded', () => {
   Auth.proteger(true);
   Auth.preencherUI();

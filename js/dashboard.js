@@ -291,10 +291,6 @@ const Dashboard = {
       overlay.classList.remove('active');
     });
 
-    // Logout
-    document.getElementById('btn-logout')?.addEventListener('click', () => {
-      if (confirm('Deseja sair do dashboard?')) Auth.logout();
-    });
   }
 };
 

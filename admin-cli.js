@@ -142,6 +142,12 @@ function erro(msg) { console.log(`${c.red}✗${c.reset} ${msg}`); }
 function info(msg) { console.log(`${c.blue}→${c.reset} ${msg}`); }
 function titulo(msg) { console.log(`\n${c.bold}${c.cyan}${msg}${c.reset}\n`); }
 
+function labelPerfil(perfil) {
+  if (perfil === 'admin') return 'Admin';
+  if (perfil === 'admin_readonly' || perfil === 'admin_visualizacao') return 'Admin leitura';
+  return 'Consultor';
+}
+
 // ── Comandos ─────────────────────────────────────────────────
 
 async function cmdListar() {
@@ -168,9 +174,7 @@ async function cmdListar() {
   console.log(linha);
 
   usuarios.forEach(u => {
-    const perfil = u.perfil === 'admin'
-      ? c.yellow + 'Admin' + c.reset
-      : c.cyan   + 'Consultor' + c.reset;
+    const perfil = labelPerfil(u.perfil);
     const status = u.ativo
       ? c.green + 'Ativo' + c.reset
       : c.red   + 'Inativo' + c.reset;
@@ -178,7 +182,7 @@ async function cmdListar() {
     console.log(
       u.nome.padEnd(18).substring(0,18) +
       u.pac.padEnd(14).substring(0,14) +
-      (u.perfil === 'admin' ? 'Admin     ' : 'Consultor ').padEnd(14) +
+      perfil.padEnd(14).substring(0,14) +
       (u.ativo ? 'Ativo     ' : 'Inativo   ').padEnd(10) +
       (u.email || '—')
     );
@@ -193,7 +197,7 @@ async function cmdAdicionar() {
   const nome   = await pergunta('Nome completo: ');
   const pac    = await pergunta('PAC (identificador de login, sem espaços): ');
   const email  = await pergunta('E-mail (opcional, Enter para pular): ');
-  const perfil = await pergunta('Perfil — 1 para Consultor, 2 para Admin [1]: ');
+  const perfil = await pergunta('Perfil — 1 Consultor, 2 Admin completo, 3 Admin somente leitura [1]: ');
   const senha  = await pergunta('Senha inicial (Enter para usar "safe@2024"): ');
 
   if (!nome.trim() || !pac.trim()) {
@@ -205,7 +209,7 @@ async function cmdAdicionar() {
     nome:   nome.trim(),
     pac:    pac.trim(),
     email:  email.trim() || '',
-    perfil: perfil.trim() === '2' ? 'admin' : 'pac',
+    perfil: perfil.trim() === '2' ? 'admin' : (perfil.trim() === '3' ? 'admin_readonly' : 'pac'),
     senha:  senha.trim() || 'safe@2024'
   };
 
@@ -215,7 +219,7 @@ async function cmdAdicionar() {
   if (res.ok) {
     ok(`Usuário "${dados.nome}" criado com sucesso!`);
     console.log(c.gray + `  Senha inicial: ${senha.trim() || 'safe@2024'}` + c.reset);
-    console.log(c.gray + `  Lembre de adicionar "${dados.pac}" no select do index.html e vendas.html` + c.reset);
+    console.log(c.gray + '  O usuário aparecerá automaticamente no login após atualizar o Apps Script.' + c.reset);
   } else {
     erro(res.error || 'Erro ao criar usuário.');
   }
