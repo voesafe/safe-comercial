@@ -5,7 +5,7 @@
 
 const CONFIG = {
   // ← Cole aqui a URL do seu Apps Script após o deploy
-  API_URL: 'SUA_URL_DO_APPS_SCRIPT_AQUI',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzmaCBkPawFNplB5bmeroYC2DrvsOumnzfKvt7zk3IjSrzp5jBlgFP-p2TU4EW29QmE/exec',
 
   APP_NAME:    'SAFE Comercial',
   APP_VERSION: '1.0.0',
