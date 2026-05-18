@@ -42,13 +42,19 @@ const API = {
 
   async get(action, params = {}, useCache = true) {
     try {
+      const sessao = Auth.getSessao();
+      const cacheParams = {
+        ...params,
+        __pac: sessao?.pac || '',
+        __perfil: sessao?.perfil || ''
+      };
+
       // Tenta cache primeiro
       if (useCache) {
-        const cached = Cache.get(action, params);
+        const cached = Cache.get(action, cacheParams);
         if (cached) return cached;
       }
 
-      const sessao = Auth.getSessao();
       const base   = { action };
       if (sessao) { base.pac = sessao.pac; base.perfil = sessao.perfil; }
 
@@ -57,7 +63,7 @@ const API = {
       const data  = await res.json();
 
       // Armazena no cache se sucesso
-      if (data.ok && useCache) Cache.set(action, params, data);
+      if (data.ok && useCache) Cache.set(action, cacheParams, data);
 
       return data;
     } catch (err) {

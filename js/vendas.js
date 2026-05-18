@@ -9,6 +9,7 @@ const Vendas = {
   anoFiltro:  CONFIG.ANO_ATUAL,
   dados:     [],
   pacs:      [],
+  filtroPac: '',
   editandoId: null,
 
   async init() {
@@ -41,6 +42,7 @@ const Vendas = {
     }
 
     this.preencherSelectPacs();
+    this.preencherFiltroPacs();
   },
 
   preencherSelectPacs() {
@@ -64,6 +66,36 @@ const Vendas = {
     }
   },
 
+  preencherFiltroPacs() {
+    const filtro = document.getElementById('filtro-pac-vendas');
+    if (!filtro) return;
+
+    if (!Auth.eAdmin()) {
+      filtro.style.display = 'none';
+      return;
+    }
+
+    const valorAtual = filtro.value || this.filtroPac;
+    const pacs = [...new Map(
+      this.pacs
+        .filter(usuario => usuario.pac)
+        .map(usuario => [usuario.pac, usuario.pac])
+    ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    filtro.innerHTML = '<option value="">Todos os PACs</option>';
+    pacs.forEach(pac => {
+      const option = document.createElement('option');
+      option.value = pac;
+      option.textContent = pac;
+      filtro.appendChild(option);
+    });
+
+    if (valorAtual && pacs.includes(valorAtual)) {
+      filtro.value = valorAtual;
+      this.filtroPac = valorAtual;
+    }
+  },
+
   initFiltros() {
     const selMes = document.getElementById('sel-mes');
     const selAno = document.getElementById('sel-ano');
@@ -82,6 +114,11 @@ const Vendas = {
         this.carregar();
       });
     }
+
+    document.getElementById('filtro-pac-vendas')?.addEventListener('change', e => {
+      this.filtroPac = e.target.value;
+      this.renderTabela();
+    });
 
     document.getElementById('busca')?.addEventListener('input', e => {
       this.renderTabela(e.target.value);
@@ -113,17 +150,33 @@ const Vendas = {
       return;
     }
 
-    this.dados = res.data || [];
+    this.dados = this.ordenarPorDataDesc(res.data || []);
     this.renderTabela();
-    this.atualizarContador();
     this.setLoadingTabela(false);
   },
 
-  renderTabela(busca = '') {
+  timestampVenda(venda) {
+    const data = venda?.data ? new Date(venda.data).getTime() : 0;
+    return Number.isFinite(data) ? data : 0;
+  },
+
+  ordenarPorDataDesc(lista) {
+    return [...lista].sort((a, b) => {
+      const dataDiff = this.timestampVenda(b) - this.timestampVenda(a);
+      if (dataDiff !== 0) return dataDiff;
+      return String(b.id || '').localeCompare(String(a.id || ''));
+    });
+  },
+
+  renderTabela(busca = document.getElementById('busca')?.value || '') {
     const tbody = document.getElementById('tabela-vendas');
     if (!tbody) return;
 
-    let lista = this.dados;
+    let lista = this.ordenarPorDataDesc(this.dados);
+
+    if (Auth.eAdmin() && this.filtroPac) {
+      lista = lista.filter(v => String(v.pac || '') === String(this.filtroPac));
+    }
 
     if (busca.trim()) {
       const q = busca.toLowerCase();
@@ -136,6 +189,7 @@ const Vendas = {
     }
 
     if (!lista.length) {
+      this.atualizarContador(lista);
       tbody.innerHTML = `
         <tr><td colspan="8">
           <div class="empty-state">
@@ -158,12 +212,14 @@ const Vendas = {
         <td data-label="Ação">${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>` : ''}</td>
       </tr>
     `).join('');
+
+    this.atualizarContador(lista);
   },
 
-  atualizarContador() {
-    const total = this.dados.reduce((s, v) => s + (Number(v.valor) || 0), 0);
+  atualizarContador(lista = this.dados) {
+    const total = lista.reduce((s, v) => s + (Number(v.valor) || 0), 0);
     const el = document.getElementById('info-total');
-    if (el) el.textContent = `${this.dados.length} vendas · ${formatBRL(total)}`;
+    if (el) el.textContent = `${lista.length} vendas · ${formatBRL(total)}`;
   },
 
   abrirForm(venda = null) {

@@ -52,12 +52,12 @@ const Admin = {
       const ativo = this.estaAtivo(u.ativo);
       return `
       <tr>
-        <td style="font-weight:600">${u.nome}</td>
-        <td><span class="badge badge-blue">${u.pac}</span></td>
-        <td style="color:var(--gray-500);font-size:.85rem">${u.email || '—'}</td>
-        <td><span class="badge ${this.badgePerfil(u.perfil)}">${this.labelPerfil(u.perfil)}</span></td>
-        <td><span class="badge ${ativo ? 'badge-green' : 'badge-red'}">${ativo ? 'Ativo' : 'Inativo'}</span></td>
-        <td>
+        <td class="col-nome" data-label="Nome" style="font-weight:600">${u.nome}</td>
+        <td class="col-pac" data-label="PAC"><span class="badge badge-blue">${u.pac}</span></td>
+        <td class="col-email" data-label="E-mail" style="color:var(--gray-500);font-size:.85rem">${u.email || '—'}</td>
+        <td class="col-perfil" data-label="Perfil"><span class="badge ${this.badgePerfil(u.perfil)}">${this.labelPerfil(u.perfil)}</span></td>
+        <td class="col-status" data-label="Status"><span class="badge ${ativo ? 'badge-green' : 'badge-red'}">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td data-label="Ação">
           ${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Admin.editar('${u.id}')" title="Editar">✎</button>` : ''}
         </td>
       </tr>

@@ -17,6 +17,13 @@ function listarVendas(pac, mes, ano) {
     vendas.push(linhaParaVenda(row));
   }
 
+  vendas.sort(function(a, b) {
+    var dataA = a.data ? new Date(a.data).getTime() : 0;
+    var dataB = b.data ? new Date(b.data).getTime() : 0;
+    if (dataB !== dataA) return dataB - dataA;
+    return String(b.id || '').localeCompare(String(a.id || ''));
+  });
+
   return vendas;
 }
 
@@ -134,9 +141,22 @@ function calcularKPIs(pac, perfilSolicitante, mes, ano) {
     porMes[chave].receita += Number(v.valor) || 0;
   });
 
+  var totalVendasGeral = totalVendas;
+  var totalReceitaGeral = totalReceita;
+
+  if (!perfilEhAdmin(perfilSolicitante)) {
+    var vendasGerais = listarVendas(null, mes, ano);
+    totalVendasGeral = vendasGerais.length;
+    totalReceitaGeral = vendasGerais.reduce(function(soma, venda) {
+      return soma + (Number(venda.valor) || 0);
+    }, 0);
+  }
+
   return {
     totalVendas:  totalVendas,
     totalReceita: totalReceita,
+    totalVendasGeral: totalVendasGeral,
+    totalReceitaGeral: totalReceitaGeral,
     ticketMedio:  totalVendas > 0 ? totalReceita / totalVendas : 0,
     leadsNovos:   leadsNovos,
     origens:      origens,

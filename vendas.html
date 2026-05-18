@@ -88,9 +88,14 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Registro de Vendas</div>
-          <input type="text" id="busca" class="form-control"
-            placeholder="Buscar por nome, curso, email..."
-            style="max-width:280px">
+          <div class="card-actions">
+            <select id="filtro-pac-vendas" class="form-control vendas-pac-filter" data-admin-only>
+              <option value="">Todos os PACs</option>
+            </select>
+            <input type="text" id="busca" class="form-control"
+              placeholder="Buscar por nome, curso, email..."
+              style="max-width:280px">
+          </div>
         </div>
         <div class="table-wrapper">
           <table class="table table-vendas">

@@ -250,6 +250,10 @@ const Auth = {
       document.querySelectorAll('[data-admin-only]').forEach(el => {
         el.style.display = 'none';
       });
+    } else {
+      document.querySelectorAll('[data-pac-only]').forEach(el => {
+        el.style.display = 'none';
+      });
     }
 
     // Oculta ações de escrita para perfis somente leitura

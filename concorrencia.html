@@ -73,13 +73,13 @@
             style="max-width:260px">
         </div>
         <div class="table-wrapper">
-          <table class="table">
+          <table class="table table-concorrencia">
             <thead>
               <tr>
-                <th>Escola</th>
-                <th>Vendedor / Fonte</th>
-                <th>Curso</th>
-                <th style="text-align:right">Valor</th>
+                <th class="col-escola">Escola</th>
+                <th class="col-vendedor">Vendedor / Fonte</th>
+                <th class="col-curso">Curso</th>
+                <th class="col-valor" style="text-align:right">Valor</th>
                 <th style="width:80px"></th>
               </tr>
             </thead>
@@ -232,11 +232,11 @@ function renderTabela(lista) {
 
   tbody.innerHTML = filtrado.map(r => `
     <tr>
-      <td><strong>${r.escola || '—'}</strong></td>
-      <td>${r.vendedor || '—'}</td>
-      <td>${r.curso || '—'}</td>
-      <td style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(r.valor)}</td>
-      <td style="display:flex;gap:6px">
+      <td class="col-escola" data-label="Escola"><strong>${r.escola || '—'}</strong></td>
+      <td class="col-vendedor" data-label="Vendedor / Fonte">${r.vendedor || '—'}</td>
+      <td class="col-curso" data-label="Curso">${r.curso || '—'}</td>
+      <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(r.valor)}</td>
+      <td data-label="Ação" style="display:flex;gap:6px">
         ${Auth.podeEditar() ? `
           <button class="btn btn-ghost btn-sm btn-icon" onclick="editar('${r.id}')" title="Editar">✎</button>
           <button class="btn btn-ghost btn-sm btn-icon" onclick="excluir('${r.id}')" title="Excluir" style="color:var(--danger)">✕</button>

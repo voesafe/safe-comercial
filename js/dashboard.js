@@ -91,8 +91,15 @@ const Dashboard = {
 
     set('kpi-total-vendas',  k.totalVendas);
     set('kpi-receita',       formatBRL(k.totalReceita));
+    set('kpi-total-geral',   formatBRL(k.totalReceitaGeral ?? k.totalReceita));
     set('kpi-ticket',        formatBRL(k.ticketMedio));
     set('kpi-leads',         k.leadsNovos);
+    set('kpi-receita-sub',   Auth.eAdmin() ? 'Soma de todas as vendas' : 'Suas vendas no período');
+
+    const cardTotalGeral = document.getElementById('kpi-total-geral-card');
+    if (cardTotalGeral) {
+      cardTotalGeral.style.display = Auth.eAdmin() ? 'none' : 'flex';
+    }
   },
 
   renderChartReceita(porMes) {

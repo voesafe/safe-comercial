@@ -434,6 +434,21 @@ html, body {
   flex-wrap: wrap;
   gap: 12px;
 }
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 280px;
+}
+.card-actions .form-control {
+  flex: 1 1 180px;
+}
+.vendas-pac-filter {
+  max-width: 180px;
+  min-width: 150px;
+}
 
 /* ── Mobile overlay ────────────────────────────────────────── */
 .sidebar-overlay {
@@ -475,6 +490,15 @@ html, body {
   .topbar-right { flex-direction: column; align-items: flex-start; }
   .topbar-period { width: 100%; }
   .topbar-period select { flex: 1; }
+  .card-actions {
+    width: 100%;
+    min-width: 0;
+  }
+  .card-actions .form-control,
+  .vendas-pac-filter {
+    max-width: none;
+    width: 100%;
+  }
 }
 
 /* ============================================================
@@ -569,6 +593,120 @@ html, body {
 
   .table-vendas tbody td[colspan]::before,
   .table-vendas tbody td[data-label="Ação"]:empty {
+    display: none !important;
+    content: none;
+  }
+}
+
+/* ============================================================
+   Tabelas administrativas: nomes completos sem cortes
+   ============================================================ */
+.table-usuarios,
+.table-concorrencia,
+.table-fat {
+  table-layout: auto;
+}
+
+.table-usuarios thead th,
+.table-usuarios tbody td,
+.table-concorrencia thead th,
+.table-concorrencia tbody td,
+.table-fat thead th,
+.table-fat tbody td {
+  overflow: visible;
+  text-overflow: clip;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+
+.table-usuarios .col-nome,
+.table-usuarios th.col-nome,
+.table-concorrencia .col-escola,
+.table-concorrencia th.col-escola,
+.table-concorrencia .col-vendedor,
+.table-concorrencia th.col-vendedor,
+.table-concorrencia .col-curso,
+.table-concorrencia th.col-curso {
+  white-space: normal !important;
+}
+
+.table-usuarios .col-pac,
+.table-usuarios th.col-pac,
+.table-usuarios .col-perfil,
+.table-usuarios th.col-perfil,
+.table-usuarios .col-status,
+.table-usuarios th.col-status,
+.table-concorrencia .col-valor,
+.table-concorrencia th.col-valor,
+.table-fat thead th,
+.table-fat tbody td {
+  white-space: nowrap !important;
+}
+
+.table-usuarios .badge,
+.table-concorrencia .badge {
+  max-width: 100%;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+@media (max-width: 720px) {
+  .table-usuarios,
+  .table-usuarios tbody,
+  .table-usuarios tr,
+  .table-usuarios td,
+  .table-concorrencia,
+  .table-concorrencia tbody,
+  .table-concorrencia tr,
+  .table-concorrencia td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-usuarios thead,
+  .table-concorrencia thead {
+    display: none;
+  }
+
+  .table-usuarios tbody tr,
+  .table-concorrencia tbody tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .table-usuarios tbody td,
+  .table-concorrencia tbody td {
+    display: grid !important;
+    grid-template-columns: minmax(92px, 34%) 1fr;
+    align-items: start;
+    gap: 8px;
+    padding: 7px 0;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .table-usuarios tbody td::before,
+  .table-concorrencia tbody td::before {
+    content: attr(data-label);
+    color: var(--gray-500);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .table-usuarios tbody td[colspan],
+  .table-concorrencia tbody td[colspan] {
+    display: block !important;
+  }
+
+  .table-usuarios tbody td[colspan]::before,
+  .table-concorrencia tbody td[colspan]::before,
+  .table-usuarios tbody td[data-label="Ação"]:empty,
+  .table-concorrencia tbody td[data-label="Ação"]:empty {
     display: none !important;
     content: none;
   }
