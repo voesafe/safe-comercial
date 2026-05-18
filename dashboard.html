@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — SAFE Comercial</title>
+  <link rel="icon" href="assets/img/logo.png">
+  <link rel="stylesheet" href="css/safe-theme.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/img/logo.png" alt="SAFE">
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">SAFE</span>
+        <span class="sidebar-brand-sub">Comercial</span>
+      </div>
+    </div>
+
+    <div class="sidebar-toggle" id="sidebar-toggle" title="Recolher menu">‹</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+
+      <a href="dashboard.html" class="nav-item active">
+        <span class="nav-icon">◈</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="vendas.html" class="nav-item">
+        <span class="nav-icon">◎</span>
+        <span class="nav-label">Vendas</span>
+      </a>
+
+      <hr class="nav-divider" data-admin-only>
+      <div class="nav-section-label" data-admin-only>Administração</div>
+
+      <a href="faturamento.html" class="nav-item" data-admin-only>
+        <span class="nav-icon">◉</span>
+        <span class="nav-label">Faturamento</span>
+      </a>
+      <a href="concorrencia.html" class="nav-item" data-admin-only>
+        <span class="nav-icon">◐</span>
+        <span class="nav-label">Concorrência</span>
+      </a>
+      <a href="admin.html" class="nav-item" data-admin-only>
+        <span class="nav-icon">◑</span>
+        <span class="nav-label">Usuários</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="btn-logout" title="Sair">
+        <div class="sidebar-avatar">T</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Carregando...</div>
+          <div class="sidebar-user-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <main class="main" id="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">
+          <span></span><span></span><span></span>
+        </button>
+        <div>
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-subtitle">Visão geral de vendas</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-period">
+          <select id="sel-mes">
+            <option value="">Todos os meses</option>
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8">Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+          </select>
+          <select id="sel-ano">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="page">
+
+      <!-- KPIs -->
+      <div class="grid-kpis">
+        <div class="kpi-card">
+          <div class="kpi-icon blue">◎</div>
+          <div class="kpi-label">Total de Vendas</div>
+          <div class="kpi-value" id="kpi-total-vendas">—</div>
+          <div class="kpi-sub">No período selecionado</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon teal">$</div>
+          <div class="kpi-label">Receita Total</div>
+          <div class="kpi-value" id="kpi-receita">—</div>
+          <div class="kpi-sub">Soma de todas as vendas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon navy">≈</div>
+          <div class="kpi-label">Ticket Médio</div>
+          <div class="kpi-value" id="kpi-ticket">—</div>
+          <div class="kpi-sub">Média por venda</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green">★</div>
+          <div class="kpi-label">Leads Novos</div>
+          <div class="kpi-value" id="kpi-leads">—</div>
+          <div class="kpi-sub">Clientes novos no período</div>
+        </div>
+      </div>
+
+      <!-- Gráficos principais -->
+      <div class="grid-charts">
+        <!-- Receita mensal -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Receita nos últimos 6 meses</div>
+          </div>
+          <div style="height: 260px; position: relative;">
+            <canvas id="chart-receita"></canvas>
+          </div>
+        </div>
+
+        <!-- Origem dos leads -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Origem dos Leads</div>
+          </div>
+          <div style="height: 260px; position: relative;">
+            <canvas id="chart-origens"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segunda linha -->
+      <div class="grid-charts">
+
+        <!-- Ranking cursos -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Cursos mais vendidos</div>
+          </div>
+          <table class="table">
+            <tbody id="ranking-cursos">
+              <tr><td colspan="3" class="text-center text-muted" style="padding:32px">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Performance por PAC (só admin) -->
+        <div class="card" id="card-pac" data-admin-only>
+          <div class="card-header">
+            <div class="card-title">Performance por Consultor</div>
+          </div>
+          <div style="height: 240px; position: relative;">
+            <canvas id="chart-pac"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /page -->
+  </main>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

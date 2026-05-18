@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAFE Comercial — Login</title>
+  <link rel="icon" href="assets/img/logo.png">
+  <link rel="stylesheet" href="css/safe-theme.css">
+  <style>
+    body {
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Plano de fundo decorativo */
+    .bg-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: .07;
+    }
+    .bg-circle-1 {
+      width: 600px; height: 600px;
+      background: var(--blue);
+      top: -200px; right: -150px;
+    }
+    .bg-circle-2 {
+      width: 400px; height: 400px;
+      background: var(--teal);
+      bottom: -150px; left: -100px;
+    }
+    .bg-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 60px,
+          rgba(255,255,255,.015) 60px,
+          rgba(255,255,255,.015) 61px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 60px,
+          rgba(255,255,255,.015) 60px,
+          rgba(255,255,255,.015) 61px
+        );
+    }
+
+    /* Card de login */
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius-xl);
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.4);
+      animation: fadeUp .5s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+    .login-logo img {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    }
+    .login-logo-name {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: .02em;
+    }
+    .login-logo-sub {
+      font-size: .75rem;
+      color: rgba(255,255,255,.4);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-top: 4px;
+    }
+
+    .login-title {
+      font-family: var(--font-title);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: .82rem;
+      color: rgba(255,255,255,.4);
+      margin-bottom: 28px;
+    }
+
+    .login-label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .login-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,.07);
+      border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      font-size: .95rem;
+      font-family: var(--font-body);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 16px;
+    }
+    .login-input:focus {
+      border-color: var(--blue);
+      background: rgba(91,174,226,.08);
+      box-shadow: 0 0 0 3px rgba(91,174,226,.12);
+    }
+    .login-input::placeholder { color: rgba(255,255,255,.2); }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      color: var(--white);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-size: .95rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .login-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(91,174,226,.35);
+    }
+    .login-btn:disabled { opacity: .6; }
+
+    .login-error {
+      background: rgba(231,76,60,.12);
+      border: 1px solid rgba(231,76,60,.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: #ff8a80;
+      font-size: .82rem;
+      margin-top: 14px;
+      display: none;
+    }
+    .login-error.show { display: block; }
+
+    .login-footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      text-align: center;
+      font-size: .72rem;
+      color: rgba(255,255,255,.25);
+    }
+
+    /* Select customizado para PAC */
+    .login-select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,.07);
+      border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      font-size: .95rem;
+      font-family: var(--font-body);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 16px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+    .login-select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(91,174,226,.12);
+    }
+    .login-select option { background: var(--navy); color: var(--white); }
+  </style>
+</head>
+<body>
+
+  <div class="bg-decor">
+    <div class="bg-circle bg-circle-1"></div>
+    <div class="bg-circle bg-circle-2"></div>
+    <div class="bg-lines"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="assets/img/logo.png" alt="SAFE">
+      <div class="login-logo-name">SAFE</div>
+      <div class="login-logo-sub">Escola de Aviação</div>
+    </div>
+
+    <div class="login-title">Acesso ao Dashboard</div>
+    <div class="login-sub">Entre com suas credenciais comerciais</div>
+
+    <label class="login-label">Consultor (PAC)</label>
+    <select class="login-select" id="inp-pac">
+      <option value="" disabled selected>Selecione seu nome</option>
+      <option value="Thiago">Thiago</option>
+      <option value="Marlon">Marlon</option>
+      <option value="Adauto">Adauto</option>
+    </select>
+
+    <label class="login-label">Senha</label>
+    <input
+      type="password"
+      class="login-input"
+      id="inp-senha"
+      placeholder="••••••••"
+      autocomplete="current-password"
+    >
+
+    <button class="login-btn" id="btn-login">
+      Entrar no Dashboard
+    </button>
+
+    <div class="login-error" id="login-error"></div>
+
+    <div class="login-footer">
+      SAFE Escola de Aviação &copy; 2025 &mdash; Dashboard Comercial
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    // Auth inline (sem dependência de auth.js ainda)
+    const sessao = sessionStorage.getItem(CONFIG.SESSION_KEY);
+    if (sessao) window.location.href = 'dashboard.html';
+  </script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const btnLogin  = document.getElementById('btn-login');
+    const inpPac    = document.getElementById('inp-pac');
+    const inpSenha  = document.getElementById('inp-senha');
+    const errEl     = document.getElementById('login-error');
+
+    function mostrarErro(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add('show');
+    }
+    function limparErro() {
+      errEl.classList.remove('show');
+    }
+
+    async function fazerLogin() {
+      const pac   = inpPac.value.trim();
+      const senha = inpSenha.value;
+
+      if (!pac)   { mostrarErro('Selecione seu nome.'); return; }
+      if (!senha) { mostrarErro('Digite sua senha.'); return; }
+
+      limparErro();
+      btnLoading(btnLogin, true);
+
+      const res = await Auth.login(pac, senha);
+
+      btnLoading(btnLogin, false);
+
+      if (res.ok) {
+        window.location.href = 'dashboard.html';
+      } else {
+        mostrarErro(res.error || 'PAC ou senha incorretos.');
+        inpSenha.value = '';
+        inpSenha.focus();
+      }
+    }
+
+    btnLogin.addEventListener('click', fazerLogin);
+    inpSenha.addEventListener('keydown', e => {
+      if (e.key === 'Enter') fazerLogin();
+    });
+    inpPac.addEventListener('change', limparErro);
+  </script>
+</body>
+</html>

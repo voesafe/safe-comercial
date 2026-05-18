@@ -1,0 +1,273 @@
+// ============================================================
+// vendas.js — Listagem, cadastro e edição de vendas
+// SAFE Dashboard Comercial
+// ============================================================
+
+const Vendas = {
+
+  mesFiltro: '',
+  anoFiltro: CONFIG.ANO_ATUAL,
+  dados:     [],
+  editandoId: null,
+
+  async init() {
+    Auth.proteger();
+    Auth.preencherUI();
+    this.initFiltros();
+    this.initForm();
+    this.initSidebar();
+    await this.carregar();
+  },
+
+  initFiltros() {
+    const selMes = document.getElementById('sel-mes');
+    const selAno = document.getElementById('sel-ano');
+
+    if (selMes) {
+      selMes.addEventListener('change', () => {
+        this.mesFiltro = selMes.value;
+        this.carregar();
+      });
+    }
+    if (selAno) {
+      selAno.value = this.anoFiltro;
+      selAno.addEventListener('change', () => {
+        this.anoFiltro = selAno.value;
+        this.carregar();
+      });
+    }
+
+    // Busca local
+    document.getElementById('busca')?.addEventListener('input', e => {
+      this.renderTabela(e.target.value);
+    });
+  },
+
+  initForm() {
+    // Botão nova venda
+    document.getElementById('btn-nova-venda')?.addEventListener('click', () => {
+      this.abrirForm();
+    });
+
+    // Fechar modal
+    document.getElementById('modal-close')?.addEventListener('click', () => {
+      fecharModal('modal-venda');
+    });
+    document.getElementById('modal-cancelar')?.addEventListener('click', () => {
+      fecharModal('modal-venda');
+    });
+
+    // Salvar
+    document.getElementById('btn-salvar')?.addEventListener('click', () => {
+      this.salvar();
+    });
+
+    // PAC: se não é admin, trava o campo PAC
+    if (!Auth.eAdmin()) {
+      const campoPac = document.getElementById('f-pac');
+      if (campoPac) {
+        campoPac.value    = Auth.getPac();
+        campoPac.disabled = true;
+      }
+    }
+  },
+
+  async carregar() {
+    this.setLoadingTabela(true);
+    const res = await API.getVendas(this.mesFiltro || null, this.anoFiltro);
+
+    if (!res.ok) {
+      toast(res.error || 'Erro ao carregar vendas.', 'error');
+      this.setLoadingTabela(false);
+      return;
+    }
+
+    this.dados = res.data || [];
+    this.renderTabela();
+    this.atualizarContador();
+    this.setLoadingTabela(false);
+  },
+
+  renderTabela(busca = '') {
+    const tbody = document.getElementById('tabela-vendas');
+    if (!tbody) return;
+
+    let lista = this.dados;
+
+    // Filtro de busca local
+    if (busca.trim()) {
+      const q = busca.toLowerCase();
+      lista = lista.filter(v =>
+        (v.nome   || '').toLowerCase().includes(q) ||
+        (v.curso  || '').toLowerCase().includes(q) ||
+        (v.email  || '').toLowerCase().includes(q) ||
+        (v.pac    || '').toLowerCase().includes(q)
+      );
+    }
+
+    if (!lista.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <div class="icon">◎</div>
+              <p>Nenhuma venda encontrada</p>
+            </div>
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tbody.innerHTML = lista.map(v => `
+      <tr>
+        <td>${formatData(v.data)}</td>
+        ${Auth.eAdmin() ? `<td><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.nome}">${v.nome || '—'}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.curso}">${v.curso || '—'}</td>
+        <td>${v.origem || '—'}</td>
+        <td><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
+        <td style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(v.valor)}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  atualizarContador() {
+    const total = this.dados.reduce((s, v) => s + (Number(v.valor) || 0), 0);
+    const el = document.getElementById('info-total');
+    if (el) el.textContent = `${this.dados.length} vendas · ${formatBRL(total)}`;
+  },
+
+  abrirForm(venda = null) {
+    this.editandoId = venda ? venda.id : null;
+
+    // Título do modal
+    document.getElementById('modal-titulo').textContent =
+      venda ? 'Editar Venda' : 'Nova Venda';
+
+    // Preenche ou limpa campos
+    const campos = ['data','pac','nome','sexo','idade','cidade','estado','origem','curso','email','valor','lead-novo','quem-comprou'];
+    campos.forEach(c => {
+      const el = document.getElementById('f-' + c);
+      if (!el) return;
+      if (venda) {
+        el.value = venda[c.replace('-','').replace('lead','leadNovo').replace('quem','quemComprou')] || '';
+      } else {
+        el.value = '';
+      }
+    });
+
+    // Preenche campos com mapeamento correto
+    if (venda) {
+      document.getElementById('f-data').value        = venda.data        || '';
+      document.getElementById('f-pac').value         = venda.pac         || '';
+      document.getElementById('f-nome').value        = venda.nome        || '';
+      document.getElementById('f-sexo').value        = venda.sexo        || '';
+      document.getElementById('f-idade').value       = venda.idade       || '';
+      document.getElementById('f-cidade').value      = venda.cidade      || '';
+      document.getElementById('f-estado').value      = venda.estado      || '';
+      document.getElementById('f-origem').value      = venda.origem      || '';
+      document.getElementById('f-curso').value       = venda.curso       || '';
+      document.getElementById('f-email').value       = venda.email       || '';
+      document.getElementById('f-valor').value       = venda.valor       || '';
+      document.getElementById('f-lead-novo').value   = venda.leadNovo    || 'Não';
+      document.getElementById('f-quem-comprou').value= venda.quemComprou || '';
+    } else {
+      // Data padrão = hoje
+      document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+      if (!Auth.eAdmin()) {
+        document.getElementById('f-pac').value = Auth.getPac();
+      }
+    }
+
+    // Trava campo PAC para PACs
+    const campoPac = document.getElementById('f-pac');
+    if (campoPac) campoPac.disabled = !Auth.eAdmin();
+
+    abrirModal('modal-venda');
+  },
+
+  async editar(id) {
+    const venda = this.dados.find(v => v.id === id);
+    if (venda) this.abrirForm(venda);
+  },
+
+  async salvar() {
+    const btn = document.getElementById('btn-salvar');
+    btnLoading(btn, true);
+
+    const dados = {
+      id:          this.editandoId,
+      data:        document.getElementById('f-data').value,
+      pac:         document.getElementById('f-pac').value || Auth.getPac(),
+      nome:        document.getElementById('f-nome').value,
+      sexo:        document.getElementById('f-sexo').value,
+      idade:       document.getElementById('f-idade').value,
+      cidade:      document.getElementById('f-cidade').value,
+      estado:      document.getElementById('f-estado').value,
+      origem:      document.getElementById('f-origem').value,
+      curso:       document.getElementById('f-curso').value,
+      email:       document.getElementById('f-email').value,
+      valor:       document.getElementById('f-valor').value,
+      leadNovo:    document.getElementById('f-lead-novo').value,
+      quemComprou: document.getElementById('f-quem-comprou').value
+    };
+
+    // Validação básica
+    if (!dados.data || !dados.nome || !dados.valor) {
+      toast('Data, nome e valor são obrigatórios.', 'warning');
+      btnLoading(btn, false);
+      return;
+    }
+
+    const res = this.editandoId
+      ? await API.editarVenda(dados)
+      : await API.criarVenda(dados);
+
+    btnLoading(btn, false);
+
+    if (res.ok) {
+      toast(this.editandoId ? 'Venda atualizada!' : 'Venda registrada!', 'success');
+      fecharModal('modal-venda');
+      await this.carregar();
+    } else {
+      toast(res.error || 'Erro ao salvar.', 'error');
+    }
+  },
+
+  setLoadingTabela(on) {
+    const tbody = document.getElementById('tabela-vendas');
+    if (on && tbody) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>`;
+    }
+  },
+
+  initSidebar() {
+    const toggle  = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('main');
+    const overlay = document.getElementById('sidebar-overlay');
+    const hamb    = document.getElementById('hamburger');
+
+    toggle?.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      main.classList.toggle('sidebar-collapsed');
+      toggle.innerHTML = sidebar.classList.contains('collapsed') ? '›' : '‹';
+    });
+    hamb?.addEventListener('click', () => {
+      sidebar.classList.toggle('mobile-open');
+      overlay.classList.toggle('active');
+    });
+    overlay?.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    });
+    document.getElementById('btn-logout')?.addEventListener('click', () => {
+      if (confirm('Deseja sair?')) Auth.logout();
+    });
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => Vendas.init());

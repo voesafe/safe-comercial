@@ -1,0 +1,143 @@
+// ============================================================
+// Utils.gs — Funções auxiliares compartilhadas
+// SAFE Escola de Aviação | Dashboard Comercial
+// ============================================================
+
+var SHEET_ID = 'SEU_SPREADSHEET_ID_AQUI'; // ← substitua pelo ID do seu Sheets
+
+var SHEETS = {
+  USUARIOS:     'USUARIOS',
+  VENDAS:       'VENDAS',
+  FATURAMENTO:  'FATURAMENTO',
+  CONCORRENCIA: 'CONCORRENCIA'
+};
+
+/**
+ * Retorna a planilha ativa pelo nome da aba
+ */
+function getSheet(name) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) throw new Error('Aba não encontrada: ' + name);
+  return sheet;
+}
+
+/**
+ * Resposta JSON padronizada para sucesso
+ */
+function jsonSuccess(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, data: data }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Resposta JSON padronizada para erro
+ */
+function jsonError(msg) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: false, error: msg }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Hash SHA-256 simples usando Utilities do Apps Script
+ */
+function hashSenha(senha) {
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    senha,
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(function(b) {
+    return ('0' + (b & 0xFF).toString(16)).slice(-2);
+  }).join('');
+}
+
+/**
+ * Gera ID único baseado em timestamp + random
+ */
+function gerarId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+/**
+ * Formata data para DD/MM/YYYY
+ */
+function formatarData(date) {
+  if (!date) return '';
+  var d = new Date(date);
+  return ('0' + d.getDate()).slice(-2) + '/' +
+         ('0' + (d.getMonth() + 1)).slice(-2) + '/' +
+         d.getFullYear();
+}
+
+/**
+ * Converte linha do Sheets para objeto de venda
+ */
+function linhaParaVenda(row) {
+  return {
+    id:          row[0],
+    data:        row[1] ? new Date(row[1]).toISOString().split('T')[0] : '',
+    pac:         row[2],
+    nome:        row[3],
+    sexo:        row[4],
+    idade:       row[5],
+    cidade:      row[6],
+    estado:      row[7],
+    origem:      row[8],
+    curso:       row[9],
+    email:       row[10],
+    valor:       row[11],
+    leadNovo:    row[12],
+    quemComprou: row[13],
+    mes:         row[14],
+    ano:         row[15]
+  };
+}
+
+/**
+ * Inicializa as abas necessárias (rode uma vez no setup)
+ */
+function inicializarPlanilha() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+
+  // USUARIOS
+  var usuarios = ss.getSheetByName(SHEETS.USUARIOS);
+  if (!usuarios) {
+    usuarios = ss.insertSheet(SHEETS.USUARIOS);
+    usuarios.appendRow(['ID', 'NOME', 'PAC', 'EMAIL', 'SENHA_HASH', 'PERFIL', 'ATIVO', 'CRIADO_EM']);
+    // Cria usuários padrão (senha inicial: safe@2024)
+    var senhaHash = hashSenha('safe@2024');
+    usuarios.appendRow([gerarId(), 'Thiago',  'Thiago',  'thiago@voesafe.com.br',  senhaHash, 'admin', true, new Date()]);
+    usuarios.appendRow([gerarId(), 'Marlon',  'Marlon',  'marlon@voesafe.com.br',  senhaHash, 'pac',   true, new Date()]);
+    usuarios.appendRow([gerarId(), 'Adauto',  'Adauto',  'adauto@voesafe.com.br',  senhaHash, 'pac',   true, new Date()]);
+  }
+
+  // VENDAS
+  var vendas = ss.getSheetByName(SHEETS.VENDAS);
+  if (!vendas) {
+    vendas = ss.insertSheet(SHEETS.VENDAS);
+    vendas.appendRow([
+      'ID', 'DATA', 'PAC', 'NOME_COMPLETO', 'SEXO', 'IDADE',
+      'CIDADE', 'ESTADO', 'ORIGEM_LEAD', 'CURSO_COMPRADO',
+      'EMAIL', 'VALOR', 'LEAD_NOVO', 'QUEM_COMPROU', 'MES', 'ANO'
+    ]);
+  }
+
+  // FATURAMENTO
+  var fat = ss.getSheetByName(SHEETS.FATURAMENTO);
+  if (!fat) {
+    fat = ss.insertSheet(SHEETS.FATURAMENTO);
+    fat.appendRow(['ID', 'MES', 'ANO', 'CANAL', 'VALOR', 'ATUALIZADO_EM']);
+  }
+
+  // CONCORRENCIA
+  var conc = ss.getSheetByName(SHEETS.CONCORRENCIA);
+  if (!conc) {
+    conc = ss.insertSheet(SHEETS.CONCORRENCIA);
+    conc.appendRow(['ID', 'ESCOLA', 'VENDEDOR', 'CURSO', 'VALOR', 'ATUALIZADO_EM']);
+  }
+
+  return 'Planilha inicializada com sucesso!';
+}
