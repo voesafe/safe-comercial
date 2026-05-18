@@ -44,22 +44,43 @@ const Dashboard = {
   async carregar() {
     this.setLoading(true);
 
-    const res = await API.getKPIs(this.mesFiltro, this.anoFiltro);
+    try {
+      const res = await API.getKPIs(this.mesFiltro, this.anoFiltro);
 
-    if (!res.ok) {
-      toast(res.error || 'Erro ao carregar dados.', 'error');
+      if (!res.ok) {
+        toast(res.error || 'Erro ao carregar dados.', 'error');
+        return;
+      }
+
+      const k = res.data;
+      this.renderKPIs(k);
+      this.renderChartReceita(k.porMes);
+      this.renderChartOrigens(k.origens);
+      if (Auth.eAdmin()) this.renderChartPac(k.porPac);
+      this.renderRankingCursos(k.cursos);
+    } finally {
       this.setLoading(false);
-      return;
     }
+  },
 
-    const k = res.data;
-    this.renderKPIs(k);
-    this.renderChartReceita(k.porMes);
-    this.renderChartOrigens(k.origens);
-    if (Auth.eAdmin()) this.renderChartPac(k.porPac);
-    this.renderRankingCursos(k.cursos);
+  getLoadingOverlay() {
+    let overlay = document.getElementById('dashboard-loading-overlay');
+    const page = document.querySelector('.page');
+    if (overlay || !page) return overlay;
 
-    this.setLoading(false);
+    overlay = document.createElement('div');
+    overlay.id = 'dashboard-loading-overlay';
+    overlay.className = 'dashboard-loading-overlay';
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML = `
+      <div class="dashboard-loading-card">
+        <img class="dashboard-loading-logo" src="assets/img/logo.png" alt="SAFE">
+        <div class="dashboard-loading-text">Carregando dados</div>
+      </div>
+    `;
+    page.appendChild(overlay);
+
+    return overlay;
   },
 
   renderKPIs(k) {
@@ -261,6 +282,9 @@ const Dashboard = {
   },
 
   setLoading(on) {
+    const overlay = this.getLoadingOverlay();
+    if (overlay) overlay.classList.toggle('active', on);
+
     document.querySelectorAll('.kpi-value').forEach(el => {
       if (on) el.style.opacity = '.3';
       else    el.style.opacity = '1';
