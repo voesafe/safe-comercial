@@ -28,7 +28,7 @@ html, body {
   left: 0; top: 0;
   z-index: 200;
   transition: width .25s cubic-bezier(.4,0,.2,1);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
@@ -408,6 +408,7 @@ html, body {
     transform: translateX(-100%);
     width: var(--sidebar-w);
   }
+  .sidebar-toggle { display: none; }
   .sidebar.mobile-open {
     transform: translateX(0);
   }
