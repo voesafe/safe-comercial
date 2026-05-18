@@ -254,10 +254,11 @@
 
     <label class="login-label">Usuário</label>
     <select class="login-select" id="inp-pac">
-      <option value="" disabled selected>Selecione seu nome</option>
+      <option value="" disabled selected>Selecione seu PAC</option>
       <option value="Thiago">Thiago</option>
       <option value="Marlon">Marlon</option>
       <option value="Adauto">Adauto</option>
+      <option value="Ramos">Ramos</option>
     </select>
 
     <label class="login-label">Senha</label>
@@ -305,39 +306,68 @@
     const usuariosFallback = Array.from(
       inpPac.querySelectorAll('option:not([disabled])')
     ).map(option => ({ nome: option.textContent.trim(), pac: option.value }));
+    const usuariosCacheKey = `${CONFIG.SESSION_KEY}_login_users`;
+
+    function normalizarUsuariosLogin(usuarios) {
+      const porPac = new Map();
+
+      (usuarios || []).forEach(usuario => {
+        const pac = String(usuario.pac || '').trim();
+        if (!pac) return;
+        porPac.set(pac.toLowerCase(), { ...usuario, pac });
+      });
+
+      return Array.from(porPac.values())
+        .sort((a, b) => a.pac.localeCompare(b.pac, 'pt-BR'));
+    }
+
+    function getUsuariosCache() {
+      try {
+        const raw = localStorage.getItem(usuariosCacheKey);
+        return raw ? normalizarUsuariosLogin(JSON.parse(raw)) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function salvarUsuariosCache(usuarios) {
+      try {
+        localStorage.setItem(usuariosCacheKey, JSON.stringify(normalizarUsuariosLogin(usuarios)));
+      } catch {}
+    }
 
     function preencherUsuariosLogin(usuarios) {
       const valorAtual = inpPac.value;
+      const lista = normalizarUsuariosLogin(usuarios);
       inpPac.innerHTML = '';
 
       const placeholder = document.createElement('option');
       placeholder.value = '';
       placeholder.disabled = true;
       placeholder.selected = true;
-      placeholder.textContent = 'Selecione seu nome';
+      placeholder.textContent = 'Selecione seu PAC';
       inpPac.appendChild(placeholder);
 
-      usuarios.forEach(usuario => {
-        if (!usuario.pac) return;
+      lista.forEach(usuario => {
         const option = document.createElement('option');
         option.value = usuario.pac;
-        option.textContent = usuario.nome && usuario.nome !== usuario.pac
-          ? `${usuario.nome} (${usuario.pac})`
-          : usuario.pac;
+        option.textContent = usuario.pac;
         inpPac.appendChild(option);
       });
 
-      if (valorAtual && usuarios.some(usuario => usuario.pac === valorAtual)) {
+      if (valorAtual && lista.some(usuario => usuario.pac === valorAtual)) {
         inpPac.value = valorAtual;
       }
     }
 
     async function carregarUsuariosLogin() {
-      preencherUsuariosLogin(usuariosFallback);
+      const cache = getUsuariosCache();
+      preencherUsuariosLogin(cache.length ? cache : usuariosFallback);
 
       try {
         const res = await API.getUsuariosLogin();
         if (res.ok && Array.isArray(res.data) && res.data.length) {
+          salvarUsuariosCache(res.data);
           preencherUsuariosLogin(res.data);
         }
       } catch {

@@ -150,8 +150,8 @@ const API = {
       valor === 1 ||
       String(valor).trim().toLowerCase() === 'true';
 
-    const porNome = (a, b) =>
-      String(a.nome || a.pac).localeCompare(String(b.nome || b.pac), 'pt-BR');
+    const porPac = (a, b) =>
+      String(a.pac || '').localeCompare(String(b.pac || ''), 'pt-BR');
 
     // Usa primeiro a rota já publicada, para novos usuários aparecerem agora.
     return {
@@ -163,7 +163,7 @@ const API = {
           pac:    usuario.pac,
           perfil: usuario.perfil
         }))
-        .sort(porNome)
+        .sort(porPac)
     };
   },
 
