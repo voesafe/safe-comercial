@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concorrência — SAFE Comercial</title>
+  <link rel="icon" href="assets/img/logo.png">
+  <link rel="stylesheet" href="css/safe-theme.css">
+  <link rel="stylesheet" href="css/layout.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/img/logo.png" alt="SAFE">
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">SAFE</span>
+        <span class="sidebar-brand-sub">Comercial</span>
+      </div>
+    </div>
+    <div class="sidebar-toggle" id="sidebar-toggle">‹</div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></a>
+      <a href="vendas.html" class="nav-item"><span class="nav-icon">◎</span><span class="nav-label">Vendas</span></a>
+      <hr class="nav-divider">
+      <div class="nav-section-label">Administração</div>
+      <a href="faturamento.html" class="nav-item"><span class="nav-icon">◉</span><span class="nav-label">Faturamento</span></a>
+      <a href="concorrencia.html" class="nav-item active"><span class="nav-icon">◐</span><span class="nav-label">Concorrência</span></a>
+      <a href="admin.html" class="nav-item"><span class="nav-icon">◑</span><span class="nav-label">Usuários</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="btn-logout">
+        <div class="sidebar-avatar">T</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Thiago</div>
+          <div class="sidebar-user-role">Administrador</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main" id="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+        <div>
+          <div class="topbar-title">Concorrência</div>
+          <div class="topbar-subtitle">Comparativo de preços com outras escolas</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="btn-novo">+ Adicionar</button>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- Cards de resumo por escola -->
+      <div id="cards-escolas" class="grid-kpis mb-24"></div>
+
+      <!-- Tabela completa -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Tabela comparativa</div>
+          <input type="text" id="busca" class="form-control"
+            placeholder="Buscar escola, curso..."
+            style="max-width:260px">
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Escola</th>
+                <th>Vendedor / Fonte</th>
+                <th>Curso</th>
+                <th style="text-align:right">Valor</th>
+                <th style="width:80px"></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-conc">
+              <tr><td colspan="5" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-conc">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-titulo">Adicionar Concorrente</h3>
+      <button class="modal-close" onclick="fecharModal('modal-conc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Escola *</label>
+        <input type="text" class="form-control" id="c-escola" placeholder="Nome da escola concorrente">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vendedor / Fonte</label>
+        <input type="text" class="form-control" id="c-vendedor" placeholder="Ex: Adauto, Site, Indicação">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Curso *</label>
+        <select class="form-control" id="c-curso">
+          <option value="">Selecione o curso</option>
+          <option>Piloto Privado Teórico</option>
+          <option>Piloto Privado Prático</option>
+          <option>Piloto Comercial/IFR Prático</option>
+          <option>Piloto Comercial Teórico</option>
+          <option>Piloto Comercial/IFR MLTE</option>
+          <option>INVA Teórico</option>
+          <option>INVA Prático</option>
+          <option>Aperfeiçoamento Contínuo</option>
+          <option>Adaptação de Instrutor Externo</option>
+          <option>SAFE Pilot Academy</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (R$) *</label>
+        <input type="number" class="form-control" id="c-valor" placeholder="0,00" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-conc')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+
+// ── Apps Script endpoint para concorrência ──────────────────
+// Reutiliza o mesmo API_URL via doGet/doPost action='concorrencia'
+
+let dados = [];
+let editandoId = null;
+
+async function apiGetConc() {
+  try {
+    const sessao = Auth.getSessao();
+    const url = `${CONFIG.API_URL}?action=listar-concorrencia&pac=${sessao.pac}&perfil=${sessao.perfil}`;
+    const res = await fetch(url);
+    return await res.json();
+  } catch { return { ok: false, error: 'Erro de conexão.' }; }
+}
+
+async function apiPostConc(action, dados) {
+  try {
+    const sessao = Auth.getSessao();
+    const body = JSON.stringify({ action, dados, pac: sessao.pac, perfil: sessao.perfil });
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' }, body
+    });
+    return await res.json();
+  } catch { return { ok: false, error: 'Erro de conexão.' }; }
+}
+
+async function carregar() {
+  const res = await apiGetConc();
+  if (!res.ok) {
+    // Se ainda não há dados no Sheets, mostra vazio
+    renderTabela([]);
+    renderCards([]);
+    return;
+  }
+  dados = res.data || [];
+  renderTabela(dados);
+  renderCards(dados);
+}
+
+function renderCards(lista) {
+  const cont = document.getElementById('cards-escolas');
+  if (!cont) return;
+
+  // Agrupa por escola
+  const escolas = {};
+  lista.forEach(r => {
+    if (!escolas[r.escola]) escolas[r.escola] = { total: 0, cursos: 0 };
+    escolas[r.escola].total += Number(r.valor) || 0;
+    escolas[r.escola].cursos++;
+  });
+
+  if (!Object.keys(escolas).length) {
+    cont.innerHTML = '';
+    return;
+  }
+
+  cont.innerHTML = Object.entries(escolas).map(([nome, d]) => `
+    <div class="kpi-card">
+      <div class="kpi-label">${nome}</div>
+      <div class="kpi-value" style="font-size:1.3rem">${formatBRL(d.total / d.cursos)}</div>
+      <div class="kpi-sub">Ticket médio · ${d.cursos} curso${d.cursos > 1 ? 's' : ''}</div>
+      <div class="kpi-icon blue">◐</div>
+    </div>
+  `).join('');
+}
+
+function renderTabela(lista) {
+  const busca = document.getElementById('busca')?.value?.toLowerCase() || '';
+  const filtrado = busca
+    ? lista.filter(r =>
+        (r.escola || '').toLowerCase().includes(busca) ||
+        (r.curso  || '').toLowerCase().includes(busca))
+    : lista;
+
+  const tbody = document.getElementById('tabela-conc');
+  if (!tbody) return;
+
+  if (!filtrado.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
+      <div class="icon">◐</div>
+      <p>Nenhum dado cadastrado ainda.<br>Clique em "+ Adicionar" para começar.</p>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtrado.map(r => `
+    <tr>
+      <td><strong>${r.escola || '—'}</strong></td>
+      <td>${r.vendedor || '—'}</td>
+      <td>${r.curso || '—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(r.valor)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="editar('${r.id}')" title="Editar">✎</button>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="excluir('${r.id}')" title="Excluir" style="color:var(--danger)">✕</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function abrirForm(item = null) {
+  editandoId = item ? item.id : null;
+  document.getElementById('modal-titulo').textContent = item ? 'Editar Concorrente' : 'Adicionar Concorrente';
+  document.getElementById('c-escola').value   = item?.escola   || '';
+  document.getElementById('c-vendedor').value = item?.vendedor || '';
+  document.getElementById('c-curso').value    = item?.curso    || '';
+  document.getElementById('c-valor').value    = item?.valor    || '';
+  abrirModal('modal-conc');
+}
+
+function editar(id) {
+  const item = dados.find(r => r.id === id);
+  if (item) abrirForm(item);
+}
+
+async function excluir(id) {
+  if (!confirm('Remover este registro?')) return;
+  const res = await apiPostConc('excluir-concorrencia', { id });
+  if (res.ok) { toast('Removido!', 'success'); await carregar(); }
+  else toast(res.error || 'Erro ao remover.', 'error');
+}
+
+document.getElementById('btn-novo')?.addEventListener('click', () => abrirForm());
+
+document.getElementById('btn-salvar')?.addEventListener('click', async () => {
+  const btn = document.getElementById('btn-salvar');
+  const dadosForm = {
+    id:       editandoId,
+    escola:   document.getElementById('c-escola').value.trim(),
+    vendedor: document.getElementById('c-vendedor').value.trim(),
+    curso:    document.getElementById('c-curso').value,
+    valor:    document.getElementById('c-valor').value
+  };
+
+  if (!dadosForm.escola || !dadosForm.curso || !dadosForm.valor) {
+    toast('Escola, curso e valor são obrigatórios.', 'warning');
+    return;
+  }
+
+  btnLoading(btn, true);
+  const action = editandoId ? 'editar-concorrencia' : 'criar-concorrencia';
+  const res = await apiPostConc(action, dadosForm);
+  btnLoading(btn, false);
+
+  if (res.ok) {
+    toast(editandoId ? 'Atualizado!' : 'Adicionado!', 'success');
+    fecharModal('modal-conc');
+    await carregar();
+  } else {
+    toast(res.error || 'Erro ao salvar.', 'error');
+  }
+});
+
+document.getElementById('busca')?.addEventListener('input', () => renderTabela(dados));
+
+// Sidebar
+document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('sidebar-collapsed');
+  const t = document.getElementById('sidebar-toggle');
+  t.innerHTML = document.getElementById('sidebar').classList.contains('collapsed') ? '›' : '‹';
+});
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+});
+document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+});
+document.getElementById('btn-logout')?.addEventListener('click', () => {
+  if (confirm('Deseja sair?')) Auth.logout();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.proteger(true);
+  Auth.preencherUI();
+  carregar();
+});
+</script>
+</body>
+</html>

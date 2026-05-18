@@ -43,6 +43,10 @@ function doGet(e) {
       case 'canais':
         return jsonSuccess(CANAIS);
 
+      case 'listar-concorrencia':
+        if (perfil !== 'admin') return jsonError('Acesso negado');
+        return jsonSuccess(listarConcorrencia());
+
       default:
         return jsonError('Ação desconhecida: ' + action);
     }
@@ -96,6 +100,20 @@ function doPost(e) {
         var editado = atualizarUsuario(dados.id, dados);
         if (!editado) return jsonError('Usuário não encontrado');
         return jsonSuccess({ mensagem: 'Usuário atualizado' });
+
+      case 'criar-concorrencia':
+        if (perfil !== 'admin') return jsonError('Acesso negado');
+        return jsonSuccess(criarConcorrencia(dados));
+
+      case 'editar-concorrencia':
+        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!dados.id) return jsonError('ID obrigatório');
+        return jsonSuccess(editarConcorrencia(dados));
+
+      case 'excluir-concorrencia':
+        if (perfil !== 'admin') return jsonError('Acesso negado');
+        if (!dados.id) return jsonError('ID obrigatório');
+        return jsonSuccess(excluirConcorrencia(dados.id));
 
       default:
         return jsonError('Ação desconhecida: ' + action);
