@@ -102,13 +102,13 @@ const Vendas = {
 
     tbody.innerHTML = lista.map(v => `
       <tr>
-        <td style="white-space:nowrap">${formatData(v.data)}</td>
-        ${Auth.eAdmin() ? `<td><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
-        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.nome}">${v.nome || '—'}</td>
-        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.curso}">${v.curso || '—'}</td>
-        <td style="white-space:nowrap">${v.origem || '—'}</td>
-        <td><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
-        <td style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
+        <td>${formatData(v.data)}</td>
+        ${Auth.eAdmin() ? `<td class="col-pac"><span class="badge badge-blue">${v.pac || '—'}</span></td>` : ''}
+        <td title="${v.nome}">${v.nome || '—'}</td>
+        <td class="col-curso" title="${v.curso}">${v.curso || '—'}</td>
+        <td class="col-origem">${v.origem || '—'}</td>
+        <td class="col-lead"><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
+        <td style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(v.valor)}</td>
         <td>
           <button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>
         </td>

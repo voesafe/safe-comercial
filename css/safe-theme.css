@@ -486,3 +486,63 @@ h4 { font-size: 1rem; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ============================================================
+   Tabela responsiva — sem scroll horizontal
+   Colunas secundárias somem progressivamente em telas menores
+   ============================================================ */
+
+/* Garante que nada vaze */
+*, *::before, *::after { box-sizing: border-box; }
+
+.table-wrapper {
+  overflow-x: hidden !important;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+/* Colunas com largura fixa */
+.table thead th:nth-child(1) { width: 100px; } /* Data */
+.table thead th:nth-child(2) { width: 90px;  } /* PAC */
+.table thead th:nth-child(3) { width: auto;  } /* Cliente — flex */
+.table thead th:nth-child(4) { width: 140px; } /* Curso */
+.table thead th:nth-child(5) { width: 110px; } /* Origem */
+.table thead th:nth-child(6) { width: 90px;  } /* Lead Novo */
+.table thead th:nth-child(7) { width: 110px; } /* Valor */
+.table thead th:nth-child(8) { width: 44px;  } /* Ação */
+
+/* Células truncam com reticências */
+.table tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── 1200px: some Origem ──────────────────────────────────── */
+@media (max-width: 1200px) {
+  .table .col-origem,
+  .table th.col-origem { display: none; }
+}
+
+/* ── 960px: some Lead Novo ───────────────────────────────── */
+@media (max-width: 960px) {
+  .table .col-lead,
+  .table th.col-lead { display: none; }
+}
+
+/* ── 720px: some PAC ─────────────────────────────────────── */
+@media (max-width: 720px) {
+  .table .col-pac,
+  .table th.col-pac { display: none; }
+}
+
+/* ── 520px: some Curso ───────────────────────────────────── */
+@media (max-width: 520px) {
+  .table .col-curso,
+  .table th.col-curso { display: none; }
+}
