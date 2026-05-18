@@ -328,11 +328,10 @@ html, body {
   gap: 16px;
 }
 
-/* ── Table wrapper responsive ──────────────────────────────── */
+/* ── Table wrapper ─────────────────────────────────────────── */
 .table-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 /* ── Card overflow ─────────────────────────────────────────── */

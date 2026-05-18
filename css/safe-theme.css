@@ -487,11 +487,6 @@ h4 { font-size: 1rem; }
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
-/* ============================================================
-   Tabela responsiva — sem scroll horizontal
-   Colunas secundárias somem progressivamente em telas menores
-   ============================================================ */
-
 /* Garante que nada vaze */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -545,4 +540,59 @@ h4 { font-size: 1rem; }
 @media (max-width: 520px) {
   .table .col-curso,
   .table th.col-curso { display: none; }
+}
+
+/* ============================================================
+   Tabela responsiva — sem scroll, sem truncamento
+   Colunas somem progressivamente conforme a tela diminui
+   ============================================================ */
+
+/* Reset: tabela ocupa espaço disponível, sem forçar largura */
+.table-wrapper {
+  overflow: hidden !important;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+}
+
+/* Sem truncamento em nenhuma célula */
+.table tbody td,
+.table thead th {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+}
+
+/* Apenas data e valor não quebram */
+.table td:first-child,
+.table th:first-child,
+.table td.col-valor,
+.table th.col-valor {
+  white-space: nowrap;
+}
+
+/* ── Breakpoints: colunas somem, nunca truncam ─────────────── */
+
+/* < 1100px: some Origem */
+@media (max-width: 1100px) {
+  .col-origem { display: none !important; }
+}
+
+/* < 860px: some Lead Novo */
+@media (max-width: 860px) {
+  .col-lead { display: none !important; }
+}
+
+/* < 680px: some PAC */
+@media (max-width: 680px) {
+  .col-pac { display: none !important; }
+}
+
+/* < 500px: some Curso */
+@media (max-width: 500px) {
+  .col-curso { display: none !important; }
 }
