@@ -5,8 +5,8 @@
 
 const Vendas = {
 
-  mesFiltro: '',
-  anoFiltro: CONFIG.ANO_ATUAL,
+  mesFiltro: CONFIG.MES_ATUAL,
+  anoFiltro:  CONFIG.ANO_ATUAL,
   dados:     [],
   editandoId: null,
 
@@ -24,6 +24,7 @@ const Vendas = {
     const selAno = document.getElementById('sel-ano');
 
     if (selMes) {
+      selMes.value = String(this.mesFiltro); // abre no mês atual
       selMes.addEventListener('change', () => {
         this.mesFiltro = selMes.value;
         this.carregar();

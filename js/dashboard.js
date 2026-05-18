@@ -11,7 +11,7 @@ let chartPac      = null;
 const Dashboard = {
 
   mesFiltro: CONFIG.MES_ATUAL,
-  anoFiltro: CONFIG.ANO_ATUAL,
+  anoFiltro:  CONFIG.ANO_ATUAL,
 
   async init() {
     Auth.proteger();
@@ -26,14 +26,14 @@ const Dashboard = {
     const selAno = document.getElementById('sel-ano');
 
     if (selMes) {
-      selMes.value = this.mesFiltro;
+      selMes.value = String(this.mesFiltro); // abre no mês atual
       selMes.addEventListener('change', () => {
         this.mesFiltro = selMes.value;
         this.carregar();
       });
     }
     if (selAno) {
-      selAno.value = this.anoFiltro;
+      selAno.value = String(this.anoFiltro);
       selAno.addEventListener('change', () => {
         this.anoFiltro = selAno.value;
         this.carregar();
