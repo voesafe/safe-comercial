@@ -518,23 +518,13 @@ h4 { font-size: 1rem; }
   padding: 12px 14px;
   vertical-align: middle;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 0; /* força ellipsis no table-layout:auto */
 }
 
-/* Cliente pode quebrar linha normalmente */
-.table tbody td:nth-child(3) {
+/* Cliente e curso podem quebrar linha se precisar */
+.table tbody td:nth-child(3),
+.table tbody td.col-curso {
   white-space: normal;
-  max-width: none;
   word-break: break-word;
-}
-
-/* Coluna de ação nunca trunca */
-.table tbody td:last-child {
-  white-space: nowrap;
-  max-width: none;
-  overflow: visible;
 }
 
 /* Breakpoints: colunas somem progressivamente */
