@@ -150,7 +150,7 @@
           </select>
         </div>
       </div>
-      <p class="text-sm text-muted mb-16">Preencha os valores dos canais para o mês/ano selecionado. "Vendas Comercial" usa a planilha quando preenchido; caso contrário, é calculado automaticamente.</p>
+      <p class="text-sm text-muted mb-16">Edite os valores dos canais. Para remover um lançamento, deixe o campo em branco ou coloque <strong>0</strong> e salve.</p>
       <div class="form-group">
         <label class="form-label">Lojinha (R$)</label>
         <input type="text" inputmode="numeric" class="form-control" id="fat-lojinha" placeholder="0,00">
@@ -252,32 +252,14 @@ function renderTabelaFat(dados) {
     const temQualquerValor = CANAIS.some(c => d[c] > 0);
     if (!d || !temQualquerValor) continue;
 
-    // Cada célula de canal manual tem seu próprio ícone de lixeira (se admin)
+    // Células simples — sem botões de lixeira
     const celulasCanais = CANAIS.map(c => {
-      const ehManual = CANAIS_TOTAL.includes(c);
       const temValor = d[c] > 0;
-      // Busca o ID com canal normalizado (lowercase) para bater com registrosIds
-      const id = registrosIds[`${m}-${c.toLowerCase()}`];
-
       if (!temValor) return `<td style="white-space:nowrap"><span style="color:var(--gray-300)">—</span></td>`;
-
-      const btnExcluir = (ehAdmin && ehManual && id)
-        ? `<button class="btn-acao btn-excluir-fat"
-              onclick="confirmarExclusaoCanal(${m},'${c}','${id}')"
-              title="Excluir ${c}" style="margin-left:4px;vertical-align:middle">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-              <path d="M10 11v6M14 11v6"/>
-              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-            </svg>
-          </button>`
-        : '';
-
-      return `<td style="white-space:nowrap">${formatBRL(d[c])}${btnExcluir}</td>`;
+      return `<td style="white-space:nowrap">${formatBRL(d[c])}</td>`;
     });
 
-    // Botão editar fica na coluna Total (edita o mês inteiro)
+    // Lápis na coluna Total — abre modal com todos os valores do mês para editar
     const btnEditar = ehAdmin
       ? `<button class="btn-acao btn-editar-fat" onclick="abrirEdicaoMes(${m})" title="Editar mês" style="margin-left:6px;vertical-align:middle">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
