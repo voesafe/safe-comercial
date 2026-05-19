@@ -143,6 +143,7 @@ function info(msg) { console.log(`${c.blue}→${c.reset} ${msg}`); }
 function titulo(msg) { console.log(`\n${c.bold}${c.cyan}${msg}${c.reset}\n`); }
 
 function labelPerfil(perfil) {
+  if (perfil === 'master') return 'Master TI';
   if (perfil === 'admin') return 'Admin';
   if (perfil === 'admin_readonly' || perfil === 'admin_visualizacao') return 'Admin leitura';
   return 'Consultor';
@@ -197,6 +198,7 @@ async function cmdAdicionar() {
   const nome   = await pergunta('Nome completo: ');
   const pac    = await pergunta('PAC (identificador de login, sem espaços): ');
   const email  = await pergunta('E-mail (opcional, Enter para pular): ');
+  info('Dica: digite 4 no perfil para criar um acesso Master TI.');
   const perfil = await pergunta('Perfil — 1 Consultor, 2 Admin completo, 3 Admin somente leitura [1]: ');
   const senha  = await pergunta('Senha inicial (Enter para usar "safe@2024"): ');
 
@@ -209,7 +211,7 @@ async function cmdAdicionar() {
     nome:   nome.trim(),
     pac:    pac.trim(),
     email:  email.trim() || '',
-    perfil: perfil.trim() === '2' ? 'admin' : (perfil.trim() === '3' ? 'admin_readonly' : 'pac'),
+    perfil: perfil.trim() === '2' ? 'admin' : (perfil.trim() === '3' ? 'admin_readonly' : (perfil.trim() === '4' ? 'master' : 'pac')),
     senha:  senha.trim() || 'safe@2024'
   };
 

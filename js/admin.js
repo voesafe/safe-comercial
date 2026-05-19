@@ -25,12 +25,14 @@ const Admin = {
   },
 
   labelPerfil(perfil) {
+    if (Auth.perfilEhMaster(perfil)) return 'Master TI';
     if (Auth.perfilSomenteLeitura(perfil)) return 'Admin leitura';
     if (Auth.perfilEhAdmin(perfil)) return 'Admin';
     return 'Consultor';
   },
 
   badgePerfil(perfil) {
+    if (Auth.perfilEhMaster(perfil)) return 'badge-blue';
     if (Auth.perfilSomenteLeitura(perfil)) return 'badge-orange';
     return Auth.perfilEhAdmin(perfil) ? 'badge-navy' : 'badge-teal';
   },

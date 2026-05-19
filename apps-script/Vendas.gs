@@ -50,7 +50,7 @@ function listarPacsAtivosParaKpi() {
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     var pac = String(row[2] || '').trim();
-    if (!row[0] || !pac || !valorBooleano(row[6]) || perfilSomenteLeitura(row[5])) continue;
+    if (!row[0] || !pac || !valorBooleano(row[6]) || perfilSomenteLeitura(row[5]) || perfilEhMaster(row[5])) continue;
 
     var chave = pac.toLowerCase();
     if (vistos[chave]) continue;

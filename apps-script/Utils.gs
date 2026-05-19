@@ -47,11 +47,16 @@ function normalizarPerfil(perfil) {
 
 function perfilEhAdmin(perfil) {
   var p = normalizarPerfil(perfil);
-  return p === 'admin' || p === 'admin_readonly' || p === 'admin_visualizacao';
+  return p === 'master' || p === 'admin' || p === 'admin_readonly' || p === 'admin_visualizacao';
+}
+
+function perfilEhMaster(perfil) {
+  return normalizarPerfil(perfil) === 'master';
 }
 
 function perfilEhAdminCompleto(perfil) {
-  return normalizarPerfil(perfil) === 'admin';
+  var p = normalizarPerfil(perfil);
+  return p === 'admin' || p === 'master';
 }
 
 function perfilSomenteLeitura(perfil) {

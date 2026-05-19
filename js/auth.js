@@ -25,7 +25,8 @@ const Auth = {
 
   eAdminCompleto() {
     const s = this.getSessao();
-    return s && this.normalizarPerfil(s.perfil) === 'admin';
+    const p = this.normalizarPerfil(s?.perfil);
+    return s && (p === 'admin' || p === 'master');
   },
 
   eSomenteLeitura() {
@@ -41,7 +42,11 @@ const Auth = {
 
   perfilEhAdmin(perfil) {
     const p = this.normalizarPerfil(perfil);
-    return p === 'admin' || p === 'admin_readonly' || p === 'admin_visualizacao';
+    return p === 'master' || p === 'admin' || p === 'admin_readonly' || p === 'admin_visualizacao';
+  },
+
+  perfilEhMaster(perfil) {
+    return this.normalizarPerfil(perfil) === 'master';
   },
 
   perfilSomenteLeitura(perfil) {
@@ -50,6 +55,7 @@ const Auth = {
   },
 
   descricaoPerfil(perfil) {
+    if (this.perfilEhMaster(perfil)) return 'Master TI';
     if (this.perfilSomenteLeitura(perfil)) return 'Visualização';
     if (this.perfilEhAdmin(perfil))        return 'Administrador';
     return 'Consultor Comercial';

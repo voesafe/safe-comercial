@@ -22,6 +22,7 @@ const Vendas = {
     await this.carregarPacs();
     this.initFiltros();
     this.initForm();
+    this.initExportacao();
     this.initSidebar();
     await this.carregar();
   },
@@ -37,7 +38,7 @@ const Vendas = {
     try {
       const res = await API.getUsuariosLogin();
       this.pacs = res.ok && Array.isArray(res.data) && res.data.length
-        ? res.data.filter(u => u.pac && !Auth.perfilSomenteLeitura(u.perfil))
+        ? res.data.filter(u => u.pac && !Auth.perfilSomenteLeitura(u.perfil) && !Auth.perfilEhMaster(u.perfil))
         : fallback;
     } catch { this.pacs = fallback; }
 
@@ -187,6 +188,10 @@ const Vendas = {
     document.getElementById('btn-salvar')?.addEventListener('click',       () => this.salvar());
   },
 
+  initExportacao() {
+    document.getElementById('btn-exportar-vendas')?.addEventListener('click', () => this.exportarCsv());
+  },
+
   async carregar() {
     this.setLoadingTabela(true);
     const res = await API.getVendas(this.mesFiltro || null, this.anoFiltro);
@@ -262,10 +267,7 @@ const Vendas = {
     });
   },
 
-  renderTabela(busca = document.getElementById('busca')?.value || '') {
-    const tbody = document.getElementById('tabela-vendas');
-    if (!tbody) return;
-
+  obterListaFiltrada(busca = document.getElementById('busca')?.value || '') {
     let lista = this.ordenarPorDataDesc(this.dados);
 
     // Filtro PAC
@@ -300,6 +302,15 @@ const Vendas = {
       });
     }
 
+    return lista;
+  },
+
+  renderTabela(busca = document.getElementById('busca')?.value || '') {
+    const tbody = document.getElementById('tabela-vendas');
+    if (!tbody) return;
+
+    const lista = this.obterListaFiltrada(busca);
+
     // Indicador de filtros ativos
     this._atualizarBadgeFiltros();
 
@@ -331,7 +342,7 @@ const Vendas = {
         <td class="col-lead" data-label="Lead Novo">
           <span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span>
         </td>
-        <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
+        <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(this._numeroVenda(v.valor))}</td>
         <td data-label="Ação">${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>` : ''}</td>
@@ -361,9 +372,89 @@ const Vendas = {
   },
 
   atualizarContador(lista = this.dados) {
-    const total = lista.reduce((s, v) => s + (Number(v.valor) || 0), 0);
+    const total = lista.reduce((s, v) => s + this._numeroVenda(v.valor), 0);
     const el = document.getElementById('info-total');
     if (el) el.textContent = `${lista.length} vendas · ${formatBRL(total)}`;
+  },
+
+  _numeroVenda(valor) {
+    if (valor === null || valor === undefined || valor === '') return 0;
+    if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
+
+    const texto = String(valor)
+      .replace(/R\$/g, '')
+      .replace(/\s/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? numero : 0;
+  },
+
+  _csvCampo(valor) {
+    return `"${String(valor ?? '').replace(/"/g, '""')}"`;
+  },
+
+  _slugExportacao(valor) {
+    return String(valor || 'todos')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase() || 'todos';
+  },
+
+  _nomeArquivoExportacao() {
+    const mes = this.mesFiltro ? String(this.mesFiltro).padStart(2, '0') : 'todos-meses';
+    const ano = this.anoFiltro || 'todos-anos';
+    const pac = Auth.eAdmin()
+      ? (this.filtroPac || 'todos-pacs')
+      : (Auth.getPac() || 'pac');
+
+    return `safe-vendas-${ano}-${mes}-${this._slugExportacao(pac)}.csv`;
+  },
+
+  exportarCsv() {
+    const lista = this.obterListaFiltrada();
+
+    if (!lista.length) {
+      toast('Nenhuma venda para exportar.', 'warning');
+      return;
+    }
+
+    const colunas = [
+      ['Data', v => formatData(v.data)],
+      ['PAC', v => v.pac || ''],
+      ['Cliente', v => v.nome || ''],
+      ['Sexo', v => v.sexo || ''],
+      ['Idade/Nascimento', v => v.nascimento || v.idade || ''],
+      ['Cidade', v => v.cidade || ''],
+      ['Estado', v => v.estado || ''],
+      ['Origem', v => v.origem || ''],
+      ['Curso', v => v.curso || ''],
+      ['Email', v => v.email || ''],
+      ['Valor', v => this._numeroVenda(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+      ['Lead Novo', v => v.leadNovo || ''],
+      ['Quem Comprou', v => v.quemComprou || '']
+    ];
+
+    const linhas = [
+      colunas.map(([titulo]) => this._csvCampo(titulo)).join(';'),
+      ...lista.map(venda => colunas.map(([, valor]) => this._csvCampo(valor(venda))).join(';'))
+    ];
+
+    const blob = new Blob(['\uFEFF' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = this._nomeArquivoExportacao();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    toast(`${lista.length} venda${lista.length === 1 ? '' : 's'} exportada${lista.length === 1 ? '' : 's'}.`, 'success');
   },
 
   abrirForm(venda = null) {
