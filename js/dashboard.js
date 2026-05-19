@@ -105,14 +105,15 @@ const Dashboard = {
     if (cardGlobal && Auth.eAdmin()) {
       cardGlobal.style.display = 'flex';
 
-      // Calcula receita de faturamento do ano atual (apenas 4 canais manuais)
+      // Calcula receita de faturamento (apenas 4 canais manuais: Lojinha, Academy, Azul, Lito)
+      // "Vendas Comercial" do faturamento É a mesma receita de vendas — não somar duas vezes
       const CANAIS_FAT = ['Lojinha', 'Safe Academy', 'Azul Pontos', 'Lito Academy'];
       let receitaFat = 0;
       if (resFat && resFat.ok && resFat.data) {
-        const anoFiltro = this.anoFiltro || CONFIG.ANO_ATUAL;
-        // Se há filtro de mês, soma só aquele mês; senão, soma o ano todo
-        const meses = this.mesFiltro
-          ? [Number(this.mesFiltro)]
+        // Normaliza mesFiltro: "" ou null = todos os meses
+        const mesFiltroNum = this.mesFiltro ? Number(this.mesFiltro) : null;
+        const meses = mesFiltroNum
+          ? [mesFiltroNum]
           : Array.from({ length: 12 }, (_, i) => i + 1);
 
         meses.forEach(m => {
@@ -122,6 +123,7 @@ const Dashboard = {
         });
       }
 
+      // totalReceita = soma das vendas no período (já filtrado por mês/ano pelo backend)
       const receitaVendas = k.totalReceita || 0;
       const receitaGlobal = receitaVendas + receitaFat;
 
@@ -129,7 +131,7 @@ const Dashboard = {
 
       const sub = document.getElementById('kpi-receita-global-sub');
       if (sub) sub.innerHTML =
-        `<span style="font-size:.7rem;color:var(--gray-400)">Vendas ${formatBRL(receitaVendas)} · Fat. ${formatBRL(receitaFat)}</span>`;
+        `<span style="font-size:.7rem;color:var(--gray-400)">Vendas ${formatBRL(receitaVendas)} + Fat. ${formatBRL(receitaFat)}</span>`;
     }
 
     // Badges de variação (usa dados do mês anterior se disponível)
