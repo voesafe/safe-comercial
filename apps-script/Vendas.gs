@@ -78,7 +78,9 @@ function buscarVenda(id) {
 function criarVenda(dados) {
   var sheet = getSheet(SHEETS.VENDAS);
   var id = gerarId();
-  var dataVenda = new Date(dados.data);
+  // Parseia a data como local (YYYY-MM-DD) para evitar problema de fuso UTC
+  var partesData = String(dados.data).split('-');
+  var dataVenda = new Date(Number(partesData[0]), Number(partesData[1]) - 1, Number(partesData[2]));
   var mes = dataVenda.getMonth() + 1;
   var ano = dataVenda.getFullYear();
 
@@ -121,7 +123,9 @@ function atualizarVenda(id, dados, pacSolicitante, perfilSolicitante) {
     }
 
     var row = i + 1;
-    var dataVenda = new Date(dados.data);
+    // Parseia a data como local para evitar problema de fuso UTC
+    var partesData = String(dados.data).split('-');
+    var dataVenda = new Date(Number(partesData[0]), Number(partesData[1]) - 1, Number(partesData[2]));
 
     sheet.getRange(row, 2).setValue(dataVenda);
     sheet.getRange(row, 3).setValue(dados.pac        || '');

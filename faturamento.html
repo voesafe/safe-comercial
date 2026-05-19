@@ -231,7 +231,9 @@ async function carregarIdsRegistros(ano) {
   const res = await API.getFaturamento(null, ano);
   if (!res.ok) return;
   (res.data || []).forEach(r => {
-    registrosIds[`${r.mes}-${r.canal}`] = r.id;
+    // Normaliza o número do mês (pode vir como string do backend)
+    const mesNum = Number(r.mes);
+    registrosIds[`${mesNum}-${r.canal}`] = r.id;
   });
 }
 

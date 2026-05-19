@@ -281,7 +281,7 @@ function resumoFaturamento(ano) {
     var mesVenda = Number(vRow[14]);
 
     if (meses[mesVenda] && !(origemMatriz[mesVenda] && origemMatriz[mesVenda]['Vendas Comercial'])) {
-      meses[mesVenda]['Vendas Comercial'] += Number(vRow[11]) || 0;
+      meses[mesVenda]['Vendas Comercial'] += valorVenda(vRow[11]);
     }
   }
 

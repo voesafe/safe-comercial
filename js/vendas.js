@@ -474,7 +474,7 @@ const Vendas = {
       document.getElementById('f-origem').value       = venda.origem      || '';
       document.getElementById('f-curso').value        = venda.curso       || '';
       document.getElementById('f-email').value        = venda.email       || '';
-      document.getElementById('f-valor').value        = venda.valor       || '';
+      setInputBRL('f-valor', venda.valor);
       document.getElementById('f-lead-novo').value    = venda.leadNovo    || 'Não';
       document.getElementById('f-quem-comprou').value = venda.quemComprou || '';
     } else {
@@ -521,7 +521,7 @@ const Vendas = {
       origem:      document.getElementById('f-origem').value,
       curso:       document.getElementById('f-curso').value,
       email:       document.getElementById('f-email').value,
-      valor:       document.getElementById('f-valor').value,
+      valor:       getInputBRL('f-valor'),
       leadNovo:    document.getElementById('f-lead-novo').value,
       quemComprou: document.getElementById('f-quem-comprou').value
     };
@@ -573,4 +573,34 @@ const Vendas = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => Vendas.init());
+// ── Helpers BRL para input de valor ──────────────────────────
+function aplicarMascaraBRL(input) {
+  input.addEventListener('input', () => {
+    let raw = input.value.replace(/\D/g, '');
+    if (!raw) { input.value = ''; return; }
+    const num = Number(raw) / 100;
+    input.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+}
+function setInputBRL(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!valor && valor !== 0) { el.value = ''; return; }
+  const num = typeof valor === 'string'
+    ? Number(String(valor).replace(/\./g,'').replace(',','.')) || 0
+    : Number(valor) || 0;
+  el.value = num > 0
+    ? num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '';
+}
+function getInputBRL(id) {
+  const el = document.getElementById(id);
+  if (!el || !el.value) return 0;
+  return Number(el.value.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const elValor = document.getElementById('f-valor');
+  if (elValor) aplicarMascaraBRL(elValor);
+  Vendas.init();
+});

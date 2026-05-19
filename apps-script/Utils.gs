@@ -104,9 +104,18 @@ function formatarData(date) {
  * Converte linha do Sheets para objeto de venda
  */
 function linhaParaVenda(row) {
+  // Formata a data sem conversão UTC para evitar problema de fuso (GMT-3)
+  var dataFormatada = '';
+  if (row[1]) {
+    var d = new Date(row[1]);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    dataFormatada = y + '-' + m + '-' + day;
+  }
   return {
     id:          row[0],
-    data:        row[1] ? new Date(row[1]).toISOString().split('T')[0] : '',
+    data:        dataFormatada,
     pac:         row[2],
     nome:        row[3],
     sexo:        row[4],
