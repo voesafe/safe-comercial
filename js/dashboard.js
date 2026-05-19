@@ -38,7 +38,10 @@ const Dashboard = {
   async carregar() {
     this.setLoading(true);
     try {
-      const res = await API.getKPIs(this.mesFiltro, this.anoFiltro);
+      const res = await this._comTimeout(
+        API.getKPIs(this.mesFiltro, this.anoFiltro),
+        'Tempo limite excedido ao carregar os dados.'
+      );
       if (!res.ok) { toast(res.error || 'Erro ao carregar dados.', 'error'); return; }
 
       const k = res.data;
@@ -48,9 +51,21 @@ const Dashboard = {
       if (Auth.eAdmin()) this.renderChartPac(k.porPac);
       this.renderRankingCursos(k.cursos);
       this._primeiraVez = false;
+    } catch (err) {
+      console.error('[Dashboard]', err);
+      toast(err.message || 'Erro ao renderizar o dashboard.', 'error');
     } finally {
       this.setLoading(false);
     }
+  },
+
+  _comTimeout(promise, mensagem) {
+    let timeoutId;
+    const timeout = new Promise(resolve => {
+      timeoutId = setTimeout(() => resolve({ ok: false, error: mensagem }), CONFIG.API_TIMEOUT_MS || 30000);
+    });
+
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
   },
 
   // ── KPIs ───────────────────────────────────────────────────
@@ -276,10 +291,14 @@ const Dashboard = {
   // ── Loading ────────────────────────────────────────────────
 
   setLoading(on) {
-    // Só mostra overlay no carregamento inicial; depois só opacidade
-    if (this._primeiraVez) {
-      const overlay = this._getOverlay();
-      if (overlay) overlay.classList.toggle('active', on);
+    // Mostra overlay no carregamento inicial e sempre consegue remove-lo ao finalizar.
+    const overlay = on && this._primeiraVez
+      ? this._getOverlay()
+      : document.getElementById('dashboard-loading-overlay');
+
+    if (overlay) {
+      overlay.classList.toggle('active', on);
+      if (!on) setTimeout(() => overlay.remove(), 220);
     }
 
     document.querySelectorAll('.kpi-value').forEach(el => {
@@ -331,4 +350,10 @@ const Dashboard = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => Dashboard.init());
+document.addEventListener('DOMContentLoaded', () => {
+  Dashboard.init().catch(err => {
+    console.error('[Dashboard init]', err);
+    Dashboard.setLoading(false);
+    toast('Erro ao iniciar o dashboard.', 'error');
+  });
+});

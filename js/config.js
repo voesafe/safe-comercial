@@ -8,6 +8,7 @@ const CONFIG = {
 
   APP_NAME:    'SAFE Comercial',
   APP_VERSION: '1.0.0',
+  API_TIMEOUT_MS: 30000,
 
   MESES: [
     '', 'Janeiro', 'Fevereiro', 'Março', 'Abril',
