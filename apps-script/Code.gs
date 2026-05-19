@@ -101,6 +101,11 @@ function doPost(e) {
         if (!atualizado) return jsonError('Venda não encontrada');
         return jsonSuccess({ mensagem: 'Venda atualizada' });
 
+      case 'excluir-venda':
+        if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
+        if (!dados.id) return jsonError('ID obrigatório');
+        return jsonSuccess(excluirVenda(dados.id, pac, perfil));
+
       // ── Faturamento ────────────────────────────────────────
       case 'salvar-faturamento':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');

@@ -83,6 +83,7 @@ const API = {
 
   async criarVenda(dados)  { const r = await this.post('criar-venda',  dados); if (r.ok) Cache.invalidarVendas(); return r; },
   async editarVenda(dados) { const r = await this.post('editar-venda', dados); if (r.ok) Cache.invalidarVendas(); return r; },
+  async excluirVenda(id)   { const r = await this.post('excluir-venda', { id }); if (r.ok) Cache.invalidarVendas(); return r; },
 
   // ── Faturamento ────────────────────────────────────────────
   async getFaturamento(mes, ano)     { return this.get('faturamento',        { ...(mes && {mes}), ...(ano && {ano}) }); },

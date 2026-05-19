@@ -225,15 +225,16 @@ async function carregarFaturamento() {
 }
 
 // Busca os registros com ID para mapear mes/canal → id (usado na exclusão)
-let registrosIds = {}; // { "mes-canal": id }
+let registrosIds = {}; // { "mes-canal_normalizado": id }
 async function carregarIdsRegistros(ano) {
   registrosIds = {};
   const res = await API.getFaturamento(null, ano);
   if (!res.ok) return;
   (res.data || []).forEach(r => {
-    // Normaliza o número do mês (pode vir como string do backend)
     const mesNum = Number(r.mes);
-    registrosIds[`${mesNum}-${r.canal}`] = r.id;
+    // Normaliza o canal: lowercase + trim para garantir que bate com CANAIS_TOTAL
+    const canalNorm = String(r.canal || '').trim().toLowerCase();
+    registrosIds[`${mesNum}-${canalNorm}`] = r.id;
   });
 }
 
@@ -255,7 +256,8 @@ function renderTabelaFat(dados) {
     const celulasCanais = CANAIS.map(c => {
       const ehManual = CANAIS_TOTAL.includes(c);
       const temValor = d[c] > 0;
-      const id       = registrosIds[`${m}-${c}`];
+      // Busca o ID com canal normalizado (lowercase) para bater com registrosIds
+      const id = registrosIds[`${m}-${c.toLowerCase()}`];
 
       if (!temValor) return `<td style="white-space:nowrap"><span style="color:var(--gray-300)">—</span></td>`;
 

@@ -174,7 +174,7 @@ function listarFaturamento(mes, ano) {
       id:           row[0],
       mes:          row[1],
       ano:          row[2],
-      canal:        row[3],
+      canal:        canalFaturamento(row[3]) || String(row[3]),
       valor:        row[4],
       atualizadoEm: row[5]
     });
