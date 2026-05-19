@@ -16,6 +16,7 @@ const Concorrencia = {
     this.initFiltros();
     this.initForm();
     this.initFormPrecoSafe();
+    this._inicializarMascaras();
     this.initSidebar();
     await this.carregar();
   },
@@ -240,8 +241,8 @@ const Concorrencia = {
       if (!reg) return;
       document.getElementById('fc-concorrente').value    = reg.concorrente    || '';
       document.getElementById('fc-curso').value          = reg.curso          || '';
-      document.getElementById('fc-valor-avista').value   = reg.valorAvista    || '';
-      document.getElementById('fc-valor-parcelado').value= reg.valorParcelado || '';
+      this._setValorMoeda('fc-valor-avista',   reg.valorAvista);
+      this._setValorMoeda('fc-valor-parcelado', reg.valorParcelado);
       document.getElementById('fc-parcelas').value       = reg.parcelas       || '';
       document.getElementById('fc-aeronave').value       = reg.aeronave       || '';
       document.getElementById('fc-obs').value            = reg.obs            || '';
@@ -309,8 +310,8 @@ const Concorrencia = {
     document.getElementById('fs-curso').value = curso;
 
     const existente = this.precosSafe.find(p => p.curso === curso);
-    document.getElementById('fs-valor-avista').value    = existente?.valorAvista    || '';
-    document.getElementById('fs-valor-parcelado').value = existente?.valorParcelado || '';
+    this._setValorMoeda('fs-valor-avista',    existente?.valorAvista);
+    this._setValorMoeda('fs-valor-parcelado', existente?.valorParcelado);
     document.getElementById('fs-parcelas').value        = existente?.parcelas       || '';
 
     abrirModal('modal-preco-safe');
@@ -394,10 +395,40 @@ const Concorrencia = {
 
   // ── Utils ──────────────────────────────────────────────────
 
+  // Aplica máscara de moeda BRL em um input
+  _aplicarMascaraMoeda(input) {
+    if (!input) return;
+    const formatar = (val) => {
+      let nums = val.replace(/\D/g, '');
+      if (!nums) return '';
+      const num = parseInt(nums, 10) / 100;
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+    input.addEventListener('input', () => {
+      const antes = input.value.length;
+      input.value = formatar(input.value);
+    });
+    input.addEventListener('blur', () => {
+      if (input.value === 'R$\u00a00,00' || input.value === 'R$ 0,00') input.value = '';
+    });
+  },
+
+  _inicializarMascaras() {
+    ['fc-valor-avista','fc-valor-parcelado','fs-valor-avista','fs-valor-parcelado'].forEach(id => {
+      this._aplicarMascaraMoeda(document.getElementById(id));
+    });
+  },
+
+  _setValorMoeda(id, numero) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!numero) { el.value = ''; return; }
+    el.value = Number(numero).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  },
+
   _parseBRL(valor) {
     if (!valor) return 0;
-    // Aceita: 35000 | 35.000 | 35.000,00 | R$ 35.000,00
-    const limpo = String(valor).replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+    const limpo = String(valor).replace(/[R$\s\u00a0]/g, '').replace(/\./g, '').replace(',', '.');
     return parseFloat(limpo) || 0;
   },
 
