@@ -62,7 +62,9 @@ const Vendas = {
   preencherFiltroPacs() {
     const filtro = document.getElementById('filtro-pac-vendas');
     if (!filtro) return;
-    if (!Auth.eAdmin()) { filtro.style.display = 'none'; return; }
+    const campo = filtro.closest('[data-admin-only]') || filtro;
+    if (!Auth.eAdmin()) { campo.style.display = 'none'; return; }
+    campo.style.display = '';
 
     const valorAtual = filtro.value || this.filtroPac;
     const pacs = [...new Map(
@@ -78,19 +80,55 @@ const Vendas = {
     if (valorAtual && pacs.includes(valorAtual)) { filtro.value = valorAtual; this.filtroPac = valorAtual; }
   },
 
-  // Popula o dropdown de estados nos filtros a partir dos dados carregados
+  _normalizarFiltroTexto(valor) {
+    return String(valor || '').trim();
+  },
+
+  // Popula os dropdowns de cidade e estado a partir das vendas carregadas
+  _preencherFiltroCidades() {
+    const sel = document.getElementById('filtro-cidade-vendas');
+    if (!sel) return;
+
+    const cidades = [...new Set(
+      this.dados.map(v => this._normalizarFiltroTexto(v.cidade)).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    const atual = sel.value || this.filtroCidade;
+    sel.innerHTML = '<option value="">Todas as cidades</option>';
+    cidades.forEach(cidade => {
+      const opt = document.createElement('option');
+      opt.value = cidade;
+      opt.textContent = cidade;
+      sel.appendChild(opt);
+    });
+
+    if (atual && cidades.includes(atual)) {
+      sel.value = atual;
+      this.filtroCidade = atual;
+    } else if (atual) {
+      this.filtroCidade = '';
+    }
+  },
+
   _preencherFiltroEstados() {
     const sel = document.getElementById('filtro-estado-vendas');
     if (!sel) return;
-    const estados = [...new Set(this.dados.map(v => v.estado).filter(Boolean))].sort();
-    const atual = sel.value;
+    const estados = [...new Set(
+      this.dados.map(v => this._normalizarFiltroTexto(v.estado)).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const atual = sel.value || this.filtroEstado;
     sel.innerHTML = '<option value="">Todos os estados</option>';
     estados.forEach(e => {
       const opt = document.createElement('option');
       opt.value = e; opt.textContent = e;
       sel.appendChild(opt);
     });
-    if (atual && estados.includes(atual)) sel.value = atual;
+    if (atual && estados.includes(atual)) {
+      sel.value = atual;
+      this.filtroEstado = atual;
+    } else if (atual) {
+      this.filtroEstado = '';
+    }
   },
 
   initFiltros() {
@@ -112,8 +150,8 @@ const Vendas = {
     document.getElementById('busca')?.addEventListener('input', e => {
       this.renderTabela(e.target.value);
     });
-    document.getElementById('filtro-cidade-vendas')?.addEventListener('input', e => {
-      this.filtroCidade = e.target.value.trim(); this.renderTabela();
+    document.getElementById('filtro-cidade-vendas')?.addEventListener('change', e => {
+      this.filtroCidade = e.target.value; this.renderTabela();
     });
     document.getElementById('filtro-estado-vendas')?.addEventListener('change', e => {
       this.filtroEstado = e.target.value; this.renderTabela();
@@ -122,14 +160,19 @@ const Vendas = {
       this.filtroIdade = e.target.value; this.renderTabela();
     });
 
-    // Botão limpar filtros avançados
+    // Limpa todos os filtros do painel de vendas.
     document.getElementById('btn-limpar-filtros')?.addEventListener('click', () => {
+      this.filtroPac = '';
       this.filtroCidade = '';
       this.filtroEstado = '';
       this.filtroIdade  = '';
+      const pac = document.getElementById('filtro-pac-vendas');
+      const busca = document.getElementById('busca');
       const cidade = document.getElementById('filtro-cidade-vendas');
       const estado = document.getElementById('filtro-estado-vendas');
       const idade  = document.getElementById('filtro-idade-vendas');
+      if (pac) pac.value = '';
+      if (busca) busca.value = '';
       if (cidade) cidade.value = '';
       if (estado) estado.value = '';
       if (idade)  idade.value  = '';
@@ -151,20 +194,49 @@ const Vendas = {
     if (!res.ok) { toast(res.error || 'Erro ao carregar vendas.', 'error'); this.setLoadingTabela(false); return; }
 
     this.dados = this.ordenarPorDataDesc(res.data || []);
+    this._preencherFiltroCidades();
     this._preencherFiltroEstados();
     this.renderTabela();
   },
 
   // ── Cálculo de idade ────────────────────────────────────────
-  _calcularIdade(nascimento) {
-    if (!nascimento) return null;
-    const nasc = new Date(nascimento);
-    if (isNaN(nasc)) return null;
+  _idadePorData(nasc) {
     const hoje = new Date();
     let idade = hoje.getFullYear() - nasc.getFullYear();
     const m = hoje.getMonth() - nasc.getMonth();
     if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
-    return idade;
+    return idade >= 0 && idade <= 120 ? idade : null;
+  },
+
+  _calcularIdade(valor) {
+    if (valor === null || valor === undefined || valor === '') return null;
+
+    if (typeof valor === 'number' && Number.isFinite(valor)) {
+      return valor >= 0 && valor <= 120 ? Math.floor(valor) : null;
+    }
+
+    const texto = String(valor).trim();
+    if (!texto) return null;
+
+    const numero = Number(texto.replace(',', '.'));
+    if (Number.isFinite(numero) && /^\d{1,3}([,.]\d+)?$/.test(texto)) {
+      return numero >= 0 && numero <= 120 ? Math.floor(numero) : null;
+    }
+
+    const dataBr = texto.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (dataBr) {
+      const dia = Number(dataBr[1]);
+      const mes = Number(dataBr[2]) - 1;
+      let ano = Number(dataBr[3]);
+      if (ano < 100) ano += ano > new Date().getFullYear() % 100 ? 1900 : 2000;
+      const nasc = new Date(ano, mes, dia);
+      if (nasc.getFullYear() === ano && nasc.getMonth() === mes && nasc.getDate() === dia) {
+        return this._idadePorData(nasc);
+      }
+    }
+
+    const nasc = new Date(texto);
+    return Number.isNaN(nasc.getTime()) ? null : this._idadePorData(nasc);
   },
 
   _faixaEtaria(idade) {
@@ -213,13 +285,12 @@ const Vendas = {
 
     // Filtro cidade
     if (this.filtroCidade) {
-      const q = this.filtroCidade.toLowerCase();
-      lista = lista.filter(v => (v.cidade || '').toLowerCase().includes(q));
+      lista = lista.filter(v => this._normalizarFiltroTexto(v.cidade) === this.filtroCidade);
     }
 
     // Filtro estado
     if (this.filtroEstado)
-      lista = lista.filter(v => (v.estado || '') === this.filtroEstado);
+      lista = lista.filter(v => this._normalizarFiltroTexto(v.estado) === this.filtroEstado);
 
     // Filtro faixa etária
     if (this.filtroIdade) {
@@ -230,7 +301,7 @@ const Vendas = {
     }
 
     // Indicador de filtros ativos
-    this._atualizarBadgeFiltros(lista.length);
+    this._atualizarBadgeFiltros();
 
     if (!lista.length) {
       this.atualizarContador(lista);
@@ -271,15 +342,22 @@ const Vendas = {
     this.atualizarContador(lista);
   },
 
-  _atualizarBadgeFiltros(total) {
-    const ativos = [this.filtroCidade, this.filtroEstado, this.filtroIdade].filter(Boolean).length;
+  _atualizarBadgeFiltros() {
+    const busca = document.getElementById('busca')?.value?.trim() || '';
+    const ativos = [
+      busca,
+      Auth.eAdmin() ? this.filtroPac : '',
+      this.filtroCidade,
+      this.filtroEstado,
+      this.filtroIdade
+    ].filter(Boolean).length;
     const badge = document.getElementById('badge-filtros-ativos');
     const btnLimpar = document.getElementById('btn-limpar-filtros');
     if (badge) {
-      badge.textContent = ativos;
+      badge.textContent = ativos === 1 ? '1 filtro' : `${ativos} filtros`;
       badge.style.display = ativos > 0 ? 'inline-flex' : 'none';
     }
-    if (btnLimpar) btnLimpar.style.display = ativos > 0 ? 'inline-flex' : 'none';
+    if (btnLimpar) btnLimpar.style.visibility = ativos > 0 ? 'visible' : 'hidden';
   },
 
   atualizarContador(lista = this.dados) {

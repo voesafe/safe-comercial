@@ -589,3 +589,110 @@ html, body {
 .card-actions .form-control { flex: 1 1 180px; }
 .vendas-pac-filter { max-width: 180px; min-width: 150px; }
 .table-wrapper { border-radius: var(--radius-md); overflow: hidden; }
+
+/* ============================================================
+   Vendas - filtros
+   ============================================================ */
+.vendas-card-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.vendas-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vendas-filter-count {
+  display: none;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(91,174,226,.12);
+  color: var(--blue-dark);
+  font-size: .72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.vendas-filter-panel {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1.5fr)
+    minmax(150px, .8fr)
+    minmax(180px, 1fr)
+    minmax(180px, 1fr)
+    minmax(160px, .85fr)
+    auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.vendas-filter-field {
+  min-width: 0;
+}
+
+.vendas-filter-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gray-400);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.vendas-filter-panel .form-control {
+  width: 100%;
+  min-height: 42px;
+  max-width: none;
+  font-size: .85rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vendas-clear-filters {
+  min-height: 42px;
+  align-self: end;
+  gap: 6px;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.vendas-pac-filter {
+  max-width: none;
+  min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .vendas-filter-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .vendas-filter-search {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 720px) {
+  .vendas-filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .vendas-filter-search {
+    grid-column: auto;
+  }
+
+  .vendas-clear-filters {
+    width: 100%;
+    justify-content: center;
+  }
+}

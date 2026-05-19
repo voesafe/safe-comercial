@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendas — SAFE Comercial</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#19213f">
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="assets/img/logo.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/safe-theme.css">
   <link rel="stylesheet" href="css/layout.css">
   <style>
@@ -161,40 +162,50 @@
 
     <div class="page">
       <div class="card">
-        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="card-header vendas-card-header">
+          <div class="vendas-header-row">
             <div class="card-title">Registro de Vendas</div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <select id="filtro-pac-vendas" class="form-control vendas-pac-filter" data-admin-only>
+            <span id="badge-filtros-ativos" class="vendas-filter-count">0 filtros</span>
+          </div>
+          <div class="vendas-filter-panel" aria-label="Filtros de vendas">
+            <div class="vendas-filter-field vendas-filter-search">
+              <label for="busca">Busca</label>
+              <input type="text" id="busca" class="form-control" placeholder="Nome, curso, email ou PAC">
+            </div>
+            <div class="vendas-filter-field" data-admin-only>
+              <label for="filtro-pac-vendas">PAC</label>
+              <select id="filtro-pac-vendas" class="form-control vendas-pac-filter">
                 <option value="">Todos os PACs</option>
               </select>
-              <input type="text" id="busca" class="form-control"
-                placeholder="Buscar por nome, curso, email..."
-                style="max-width:240px">
             </div>
-          </div>
-          <!-- Filtros avançados: cidade, estado, faixa etária -->
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--off-white);border-radius:var(--radius-sm);border:1px solid var(--gray-100)">
-            <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);white-space:nowrap">Filtrar por</span>
-            <input type="text" id="filtro-cidade-vendas" class="form-control"
-              placeholder="Cidade..." style="max-width:160px;font-size:.85rem">
-            <select id="filtro-estado-vendas" class="form-control" style="max-width:130px;font-size:.85rem">
-              <option value="">Estado</option>
-            </select>
-            <select id="filtro-idade-vendas" class="form-control" style="max-width:160px;font-size:.85rem">
-              <option value="">Faixa etária</option>
-              <option value="menor18">Menor de 18</option>
-              <option value="18-24">18 – 24 anos</option>
-              <option value="25-34">25 – 34 anos</option>
-              <option value="35-44">35 – 44 anos</option>
-              <option value="45-54">45 – 54 anos</option>
-              <option value="55+">55+ anos</option>
-            </select>
-            <button class="btn btn-ghost btn-sm" id="btn-limpar-filtros" style="display:none;font-size:.8rem;gap:4px">
+            <div class="vendas-filter-field">
+              <label for="filtro-cidade-vendas">Cidade</label>
+              <select id="filtro-cidade-vendas" class="form-control">
+                <option value="">Todas as cidades</option>
+              </select>
+            </div>
+            <div class="vendas-filter-field">
+              <label for="filtro-estado-vendas">Estado</label>
+              <select id="filtro-estado-vendas" class="form-control">
+                <option value="">Todos os estados</option>
+              </select>
+            </div>
+            <div class="vendas-filter-field">
+              <label for="filtro-idade-vendas">Faixa etária</label>
+              <select id="filtro-idade-vendas" class="form-control">
+                <option value="">Todas as idades</option>
+                <option value="menor18">Menor de 18</option>
+                <option value="18-24">18 - 24 anos</option>
+                <option value="25-34">25 - 34 anos</option>
+                <option value="35-44">35 - 44 anos</option>
+                <option value="45-54">45 - 54 anos</option>
+                <option value="55+">55+ anos</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-sm vendas-clear-filters" id="btn-limpar-filtros" type="button">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              Limpar filtros
+              Limpar
             </button>
-            <span id="badge-filtros-ativos" style="display:none;background:var(--blue);color:#fff;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:100px">0</span>
           </div>
         </div>
         <div class="table-wrapper">
