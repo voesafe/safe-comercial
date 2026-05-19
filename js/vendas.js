@@ -5,17 +5,20 @@
 
 const Vendas = {
 
-  mesFiltro: CONFIG.MES_ATUAL,
-  anoFiltro:  CONFIG.ANO_ATUAL,
-  dados:     [],
-  pacs:      [],
-  filtroPac: '',
-  editandoId: null,
+  mesFiltro:   CONFIG.MES_ATUAL,
+  anoFiltro:   CONFIG.ANO_ATUAL,
+  dados:       [],
+  pacs:        [],
+  filtroPac:   '',
+  filtroCidade:'',
+  filtroEstado:'',
+  filtroIdade: '',
+  editandoId:  null,
 
   async init() {
     Auth.proteger();
     Auth.preencherUI();
-    this.setLoadingTabela(true); // skeleton imediato
+    this.setLoadingTabela(true);
     await this.carregarPacs();
     this.initFiltros();
     this.initForm();
@@ -27,8 +30,8 @@ const Vendas = {
     const campoPac = document.getElementById('f-pac');
     if (!campoPac) return;
 
-    const fallback = Array.from(campoPac.options).map(option => ({
-      nome: option.textContent.trim(), pac: option.value, perfil: 'pac'
+    const fallback = Array.from(campoPac.options).map(o => ({
+      nome: o.textContent.trim(), pac: o.value, perfil: 'pac'
     }));
 
     try {
@@ -75,6 +78,21 @@ const Vendas = {
     if (valorAtual && pacs.includes(valorAtual)) { filtro.value = valorAtual; this.filtroPac = valorAtual; }
   },
 
+  // Popula o dropdown de estados nos filtros a partir dos dados carregados
+  _preencherFiltroEstados() {
+    const sel = document.getElementById('filtro-estado-vendas');
+    if (!sel) return;
+    const estados = [...new Set(this.dados.map(v => v.estado).filter(Boolean))].sort();
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">Todos os estados</option>';
+    estados.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      sel.appendChild(opt);
+    });
+    if (atual && estados.includes(atual)) sel.value = atual;
+  },
+
   initFiltros() {
     const selMes = document.getElementById('sel-mes');
     const selAno = document.getElementById('sel-ano');
@@ -87,15 +105,43 @@ const Vendas = {
       selAno.value = this.anoFiltro;
       selAno.addEventListener('change', () => { this.anoFiltro = selAno.value; this.carregar(); });
     }
-    document.getElementById('filtro-pac-vendas')?.addEventListener('change', e => { this.filtroPac = e.target.value; this.renderTabela(); });
-    document.getElementById('busca')?.addEventListener('input', e => { this.renderTabela(e.target.value); });
+
+    document.getElementById('filtro-pac-vendas')?.addEventListener('change', e => {
+      this.filtroPac = e.target.value; this.renderTabela();
+    });
+    document.getElementById('busca')?.addEventListener('input', e => {
+      this.renderTabela(e.target.value);
+    });
+    document.getElementById('filtro-cidade-vendas')?.addEventListener('input', e => {
+      this.filtroCidade = e.target.value.trim(); this.renderTabela();
+    });
+    document.getElementById('filtro-estado-vendas')?.addEventListener('change', e => {
+      this.filtroEstado = e.target.value; this.renderTabela();
+    });
+    document.getElementById('filtro-idade-vendas')?.addEventListener('change', e => {
+      this.filtroIdade = e.target.value; this.renderTabela();
+    });
+
+    // Botão limpar filtros avançados
+    document.getElementById('btn-limpar-filtros')?.addEventListener('click', () => {
+      this.filtroCidade = '';
+      this.filtroEstado = '';
+      this.filtroIdade  = '';
+      const cidade = document.getElementById('filtro-cidade-vendas');
+      const estado = document.getElementById('filtro-estado-vendas');
+      const idade  = document.getElementById('filtro-idade-vendas');
+      if (cidade) cidade.value = '';
+      if (estado) estado.value = '';
+      if (idade)  idade.value  = '';
+      this.renderTabela();
+    });
   },
 
   initForm() {
-    document.getElementById('btn-nova-venda')?.addEventListener('click', () => this.abrirForm());
-    document.getElementById('modal-close')?.addEventListener('click',    () => fecharModal('modal-venda'));
-    document.getElementById('modal-cancelar')?.addEventListener('click', () => fecharModal('modal-venda'));
-    document.getElementById('btn-salvar')?.addEventListener('click',     () => this.salvar());
+    document.getElementById('btn-nova-venda')?.addEventListener('click',   () => this.abrirForm());
+    document.getElementById('modal-close')?.addEventListener('click',      () => fecharModal('modal-venda'));
+    document.getElementById('modal-cancelar')?.addEventListener('click',   () => fecharModal('modal-venda'));
+    document.getElementById('btn-salvar')?.addEventListener('click',       () => this.salvar());
   },
 
   async carregar() {
@@ -105,7 +151,30 @@ const Vendas = {
     if (!res.ok) { toast(res.error || 'Erro ao carregar vendas.', 'error'); this.setLoadingTabela(false); return; }
 
     this.dados = this.ordenarPorDataDesc(res.data || []);
+    this._preencherFiltroEstados();
     this.renderTabela();
+  },
+
+  // ── Cálculo de idade ────────────────────────────────────────
+  _calcularIdade(nascimento) {
+    if (!nascimento) return null;
+    const nasc = new Date(nascimento);
+    if (isNaN(nasc)) return null;
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    return idade;
+  },
+
+  _faixaEtaria(idade) {
+    if (idade === null) return null;
+    if (idade < 18)  return 'menor18';
+    if (idade <= 24) return '18-24';
+    if (idade <= 34) return '25-34';
+    if (idade <= 44) return '35-44';
+    if (idade <= 54) return '45-54';
+    return '55+';
   },
 
   timestampVenda(venda) {
@@ -126,7 +195,12 @@ const Vendas = {
     if (!tbody) return;
 
     let lista = this.ordenarPorDataDesc(this.dados);
-    if (Auth.eAdmin() && this.filtroPac) lista = lista.filter(v => String(v.pac || '') === String(this.filtroPac));
+
+    // Filtro PAC
+    if (Auth.eAdmin() && this.filtroPac)
+      lista = lista.filter(v => String(v.pac || '') === String(this.filtroPac));
+
+    // Filtro texto (nome, curso, email, pac)
     if (busca.trim()) {
       const q = busca.toLowerCase();
       lista = lista.filter(v =>
@@ -136,6 +210,27 @@ const Vendas = {
         (v.pac   || '').toLowerCase().includes(q)
       );
     }
+
+    // Filtro cidade
+    if (this.filtroCidade) {
+      const q = this.filtroCidade.toLowerCase();
+      lista = lista.filter(v => (v.cidade || '').toLowerCase().includes(q));
+    }
+
+    // Filtro estado
+    if (this.filtroEstado)
+      lista = lista.filter(v => (v.estado || '') === this.filtroEstado);
+
+    // Filtro faixa etária
+    if (this.filtroIdade) {
+      lista = lista.filter(v => {
+        const idade = this._calcularIdade(v.nascimento || v.idade);
+        return this._faixaEtaria(idade) === this.filtroIdade;
+      });
+    }
+
+    // Indicador de filtros ativos
+    this._atualizarBadgeFiltros(lista.length);
 
     if (!lista.length) {
       this.atualizarContador(lista);
@@ -154,7 +249,6 @@ const Vendas = {
       return;
     }
 
-    // Fade-in suave ao renderizar
     tbody.style.opacity = '0';
     tbody.innerHTML = lista.map(v => `
       <tr>
@@ -173,12 +267,19 @@ const Vendas = {
       </tr>
     `).join('');
 
-    requestAnimationFrame(() => {
-      tbody.style.transition = 'opacity .25s';
-      tbody.style.opacity = '1';
-    });
-
+    requestAnimationFrame(() => { tbody.style.transition = 'opacity .25s'; tbody.style.opacity = '1'; });
     this.atualizarContador(lista);
+  },
+
+  _atualizarBadgeFiltros(total) {
+    const ativos = [this.filtroCidade, this.filtroEstado, this.filtroIdade].filter(Boolean).length;
+    const badge = document.getElementById('badge-filtros-ativos');
+    const btnLimpar = document.getElementById('btn-limpar-filtros');
+    if (badge) {
+      badge.textContent = ativos;
+      badge.style.display = ativos > 0 ? 'inline-flex' : 'none';
+    }
+    if (btnLimpar) btnLimpar.style.display = ativos > 0 ? 'inline-flex' : 'none';
   },
 
   atualizarContador(lista = this.dados) {
@@ -211,21 +312,18 @@ const Vendas = {
       ['f-nome','f-nascimento','f-cidade','f-email','f-valor'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
-      document.getElementById('f-data').value       = new Date().toISOString().split('T')[0];
-      document.getElementById('f-pac').value        = Auth.eAdmin() ? (this.pacs[0]?.pac || '') : Auth.getPac();
-      document.getElementById('f-sexo').value       = '';
-      document.getElementById('f-estado').value     = '';
-      document.getElementById('f-origem').value     = '';
-      document.getElementById('f-curso').value      = '';
-      document.getElementById('f-lead-novo').value  = 'Não';
+      document.getElementById('f-data').value         = new Date().toISOString().split('T')[0];
+      document.getElementById('f-pac').value          = Auth.eAdmin() ? (this.pacs[0]?.pac || '') : Auth.getPac();
+      document.getElementById('f-sexo').value         = '';
+      document.getElementById('f-estado').value       = '';
+      document.getElementById('f-origem').value       = '';
+      document.getElementById('f-curso').value        = '';
+      document.getElementById('f-lead-novo').value    = 'Não';
       document.getElementById('f-quem-comprou').value = '';
     }
 
     const campoPac = document.getElementById('f-pac');
-    if (campoPac) {
-      campoPac.disabled = !Auth.eAdmin();
-      if (!Auth.eAdmin()) campoPac.value = Auth.getPac();
-    }
+    if (campoPac) { campoPac.disabled = !Auth.eAdmin(); if (!Auth.eAdmin()) campoPac.value = Auth.getPac(); }
 
     abrirModal('modal-venda');
     setTimeout(() => document.getElementById('f-nome')?.focus(), 150);
@@ -276,23 +374,16 @@ const Vendas = {
     }
   },
 
-  // Skeleton animado na tabela
   setLoadingTabela(on) {
     const tbody = document.getElementById('tabela-vendas');
-    if (!tbody) return;
-    if (!on) return;
-
+    if (!tbody || !on) return;
     const cols = Auth.eAdmin() ? 8 : 7;
     const shimmer = `<td><div style="height:13px;border-radius:4px;background:linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div></td>`;
-    tbody.innerHTML = Array.from({ length: 7 }, (_, i) => `
-      <tr class="sk-row" style="opacity:${1 - i * 0.1}">
-        ${Array.from({ length: cols }, () => shimmer).join('')}
-      </tr>
-    `).join('');
-
+    tbody.innerHTML = Array.from({ length: 7 }, (_, i) =>
+      `<tr class="sk-row" style="opacity:${1 - i * 0.1}">${Array.from({ length: cols }, () => shimmer).join('')}</tr>`
+    ).join('');
     if (!document.getElementById('shimmer-kf')) {
-      const s = document.createElement('style');
-      s.id = 'shimmer-kf';
+      const s = document.createElement('style'); s.id = 'shimmer-kf';
       s.textContent = '@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}';
       document.head.appendChild(s);
     }
@@ -304,10 +395,8 @@ const Vendas = {
     const main    = document.getElementById('main');
     const overlay = document.getElementById('sidebar-overlay');
     const hamb    = document.getElementById('hamburger');
-
     toggle?.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-      main.classList.toggle('sidebar-collapsed');
+      sidebar.classList.toggle('collapsed'); main.classList.toggle('sidebar-collapsed');
       toggle.innerHTML = sidebar.classList.contains('collapsed') ? '›' : '‹';
     });
     hamb?.addEventListener('click', () => { sidebar.classList.toggle('mobile-open'); overlay.classList.toggle('active'); });
