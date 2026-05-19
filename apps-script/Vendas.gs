@@ -27,6 +27,42 @@ function listarVendas(pac, mes, ano) {
   return vendas;
 }
 
+function valorVenda(valor) {
+  if (valor === null || valor === undefined || valor === '') return 0;
+  if (typeof valor === 'number') return valor;
+
+  var texto = String(valor)
+    .replace(/R\$/g, '')
+    .replace(/\s/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+
+  var n = Number(texto);
+  return isNaN(n) ? 0 : n;
+}
+
+function listarPacsAtivosParaKpi() {
+  var sheet = getSheet(SHEETS.USUARIOS);
+  var data = sheet.getDataRange().getValues();
+  var pacs = [];
+  var vistos = {};
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var pac = String(row[2] || '').trim();
+    if (!row[0] || !pac || !valorBooleano(row[6]) || perfilSomenteLeitura(row[5])) continue;
+
+    var chave = pac.toLowerCase();
+    if (vistos[chave]) continue;
+    vistos[chave] = true;
+    pacs.push(pac);
+  }
+
+  return pacs.sort(function(a, b) {
+    return a.localeCompare(b, 'pt-BR');
+  });
+}
+
 function buscarVenda(id) {
   var sheet = getSheet(SHEETS.VENDAS);
   var data = sheet.getDataRange().getValues();
@@ -58,7 +94,7 @@ function criarVenda(dados) {
     dados.origem     || '',
     dados.curso      || '',
     dados.email      || '',
-    Number(dados.valor) || 0,
+    valorVenda(dados.valor),
     dados.leadNovo   || 'Não',
     dados.quemComprou|| '',
     mes,
@@ -97,7 +133,7 @@ function atualizarVenda(id, dados, pacSolicitante, perfilSolicitante) {
     sheet.getRange(row, 9).setValue(dados.origem     || '');
     sheet.getRange(row, 10).setValue(dados.curso     || '');
     sheet.getRange(row, 11).setValue(dados.email     || '');
-    sheet.getRange(row, 12).setValue(Number(dados.valor) || 0);
+    sheet.getRange(row, 12).setValue(valorVenda(dados.valor));
     sheet.getRange(row, 13).setValue(dados.leadNovo  || 'Não');
     sheet.getRange(row, 14).setValue(dados.quemComprou || '');
     sheet.getRange(row, 15).setValue(dataVenda.getMonth() + 1);
@@ -119,9 +155,16 @@ function calcularKPIs(pac, perfilSolicitante, mes, ano) {
   var porPac       = {};
   var porMes       = {};
 
+  if (perfilEhAdmin(perfilSolicitante)) {
+    listarPacsAtivosParaKpi().forEach(function(pacNome) {
+      porPac[pacNome] = { vendas: 0, receita: 0 };
+    });
+  }
+
   todasVendas.forEach(function(v) {
+    var valor = valorVenda(v.valor);
     totalVendas++;
-    totalReceita += Number(v.valor) || 0;
+    totalReceita += valor;
     if (v.leadNovo === 'Sim' || v.leadNovo === 'SIM') leadsNovos++;
 
     var origem = v.origem || 'Não informado';
@@ -133,12 +176,12 @@ function calcularKPIs(pac, perfilSolicitante, mes, ano) {
     var pacNome = v.pac || 'Sem PAC';
     if (!porPac[pacNome]) porPac[pacNome] = { vendas: 0, receita: 0 };
     porPac[pacNome].vendas++;
-    porPac[pacNome].receita += Number(v.valor) || 0;
+    porPac[pacNome].receita += valor;
 
     var chave = v.ano + '-' + String(v.mes).padStart(2, '0');
     if (!porMes[chave]) porMes[chave] = { vendas: 0, receita: 0 };
     porMes[chave].vendas++;
-    porMes[chave].receita += Number(v.valor) || 0;
+    porMes[chave].receita += valor;
   });
 
   var totalVendasGeral = totalVendas;
@@ -148,7 +191,7 @@ function calcularKPIs(pac, perfilSolicitante, mes, ano) {
     var vendasGerais = listarVendas(null, mes, ano);
     totalVendasGeral = vendasGerais.length;
     totalReceitaGeral = vendasGerais.reduce(function(soma, venda) {
-      return soma + (Number(venda.valor) || 0);
+      return soma + valorVenda(venda.valor);
     }, 0);
   }
 
