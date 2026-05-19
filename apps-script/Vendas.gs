@@ -148,6 +148,26 @@ function atualizarVenda(id, dados, pacSolicitante, perfilSolicitante) {
   return false;
 }
 
+function excluirVenda(id, pacSolicitante, perfilSolicitante) {
+  var sheet = getSheet(SHEETS.VENDAS);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) !== String(id)) continue;
+
+    // Consultor só pode excluir as próprias vendas
+    if (!perfilEhAdminCompleto(perfilSolicitante) &&
+        String(data[i][2]).toLowerCase() !== pacSolicitante.toLowerCase()) {
+      throw new Error('Sem permissão para excluir esta venda.');
+    }
+
+    sheet.deleteRow(i + 1);
+    return { excluido: true };
+  }
+
+  return { excluido: false, erro: 'Venda não encontrada' };
+}
+
 function calcularKPIs(pac, perfilSolicitante, mes, ano) {
   var todasVendas = listarVendas(pac, mes, ano);
 
