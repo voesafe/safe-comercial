@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug — SAFE Comercial</title>
+  <link rel="stylesheet" href="css/safe-theme.css">
+  <style>
+    body { font-family: 'Montserrat', sans-serif; padding: 32px; background: #f4f6fa; }
+    h2 { color: #1D2951; margin-top: 32px; }
+    pre { background: #1D2951; color: #60C0BF; padding: 16px; border-radius: 8px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    select, input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+    button { padding: 10px 20px; background: #1D2951; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; margin-right: 8px; }
+    button:hover { background: #5BAEE2; }
+    .ok { color: #27ae60; font-weight: 700; }
+    .err { color: #e74c3c; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #1D2951; color: white; padding: 8px 12px; text-align: left; }
+    td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #f8f9ff; }
+    .sum-box { background: #eaf4ff; border: 2px solid #5BAEE2; border-radius: 8px; padding: 16px; margin-top: 12px; }
+    .sum-box strong { color: #1D2951; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+
+<h1 style="color:#1D2951">🔍 Debug — Diagnóstico de Dados</h1>
+<p style="color:#666">Esta página lê direto da API e mostra os valores brutos. Use para identificar divergências.</p>
+
+<div class="card">
+  <h2>Parâmetros</h2>
+  <div class="row">
+    <div>
+      <label>Mês: </label>
+      <select id="sel-mes">
+        <option value="">Todos</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+        <option value="3">Março</option><option value="4">Abril</option>
+        <option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option>
+        <option value="9">Setembro</option><option value="10">Outubro</option>
+        <option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+    </div>
+    <div>
+      <label>Ano: </label>
+      <select id="sel-ano">
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+    </div>
+    <button onclick="rodarTodos()">▶ Rodar diagnóstico</button>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="card">
+  <h2>1. KPIs (totalReceita das Vendas)</h2>
+  <div id="res-kpis"><em style="color:#999">Clique em "Rodar diagnóstico"</em></div>
+</div>
+
+<!-- Vendas brutas -->
+<div class="card">
+  <h2>2. Vendas brutas no período</h2>
+  <p style="color:#666;font-size:13px">Soma linha a linha dos valores retornados pela API — deve bater com o KPI acima.</p>
+  <div id="res-vendas"><em style="color:#999">Clique em "Rodar diagnóstico"</em></div>
+</div>
+
+<!-- Faturamento resumo -->
+<div class="card">
+  <h2>3. Resumo de Faturamento (por mês)</h2>
+  <p style="color:#666;font-size:13px">Mostra o que o backend retorna para cada mês — Lojinha, Academy, Azul, Lito e Vendas Comercial.</p>
+  <div id="res-fat-resumo"><em style="color:#999">Clique em "Rodar diagnóstico"</em></div>
+</div>
+
+<!-- Faturamento registros (IDs) -->
+<div class="card">
+  <h2>4. Registros de Faturamento (com IDs)</h2>
+  <p style="color:#666;font-size:13px">Registros salvos na aba FATURAMENTO — esses são os que geram os botões de lixeira.</p>
+  <div id="res-fat-ids"><em style="color:#999">Clique em "Rodar diagnóstico"</em></div>
+</div>
+
+<!-- Comparação -->
+<div class="card">
+  <h2>5. Comparação: KPI Vendas vs Faturamento Vendas Comercial</h2>
+  <div id="res-comparacao"><em style="color:#999">Clique em "Rodar diagnóstico"</em></div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+// Garante sessão fake para passar autenticação da API (só funciona se já logado na mesma sessão)
+// Se der erro de acesso negado, abra dashboard.html primeiro para logar.
+
+function fmt(v) {
+  return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v||0);
+}
+
+async function rodarTodos() {
+  const mes = document.getElementById('sel-mes').value || null;
+  const ano = document.getElementById('sel-ano').value;
+
+  await diagKPIs(mes, ano);
+  await diagVendas(mes, ano);
+  await diagFatResumo(ano, mes);
+  await diagFatIds(ano);
+  diagComparacao(mes, ano);
+}
+
+let _kpiData = null;
+let _vendasData = null;
+let _fatResumoData = null;
+let _fatIdsData = null;
+
+async function diagKPIs(mes, ano) {
+  const el = document.getElementById('res-kpis');
+  el.innerHTML = '<em>Carregando...</em>';
+  const res = await API.getKPIs(mes, ano);
+  _kpiData = res;
+  if (!res.ok) { el.innerHTML = `<span class="err">Erro: ${res.error}</span>`; return; }
+  const k = res.data;
+  el.innerHTML = `
+    <table>
+      <tr><th>Campo</th><th>Valor</th></tr>
+      <tr><td>totalVendas</td><td><strong>${k.totalVendas}</strong></td></tr>
+      <tr><td>totalReceita</td><td><strong class="ok">${fmt(k.totalReceita)}</strong></td></tr>
+      <tr><td>totalReceitaGeral</td><td>${fmt(k.totalReceitaGeral)}</td></tr>
+      <tr><td>ticketMedio</td><td>${fmt(k.ticketMedio)}</td></tr>
+      <tr><td>leadsNovos</td><td>${k.leadsNovos}</td></tr>
+    </table>
+    <details style="margin-top:8px"><summary style="cursor:pointer;color:#5BAEE2">JSON bruto</summary><pre>${JSON.stringify(res.data, null, 2)}</pre></details>
+  `;
+}
+
+async function diagVendas(mes, ano) {
+  const el = document.getElementById('res-vendas');
+  el.innerHTML = '<em>Carregando...</em>';
+  const res = await API.getVendas(mes, ano);
+  _vendasData = res;
+  if (!res.ok) { el.innerHTML = `<span class="err">Erro: ${res.error}</span>`; return; }
+  const lista = res.data || [];
+
+  // Soma linha a linha
+  let somaTotal = 0;
+  const linhas = lista.map(v => {
+    // Mesmo parser usado no backend: remove R$, espaços, pontos, troca vírgula por ponto
+    const raw = String(v.valor || '').replace(/R\$/g,'').replace(/\s/g,'').replace(/\./g,'').replace(',','.');
+    const num = Number(raw) || 0;
+    somaTotal += num;
+    return { ...v, _valorNum: num };
+  });
+
+  el.innerHTML = `
+    <p><strong>${lista.length} vendas</strong> · Soma calculada aqui: <strong class="ok">${fmt(somaTotal)}</strong></p>
+    <p style="font-size:12px;color:#888">Se divergir do KPI acima, o problema está no parser de valor.</p>
+    <table>
+      <tr><th>Data</th><th>PAC</th><th>Nome</th><th>Valor bruto (API)</th><th>Valor parseado</th></tr>
+      ${linhas.map(v => `<tr>
+        <td>${v.data}</td>
+        <td>${v.pac}</td>
+        <td>${v.nome}</td>
+        <td style="font-family:monospace">${JSON.stringify(v.valor)}</td>
+        <td>${fmt(v._valorNum)}</td>
+      </tr>`).join('')}
+    </table>
+  `;
+}
+
+async function diagFatResumo(ano, mes) {
+  const el = document.getElementById('res-fat-resumo');
+  el.innerHTML = '<em>Carregando...</em>';
+  const res = await API.getResumoFaturamento(ano);
+  _fatResumoData = res;
+  if (!res.ok) { el.innerHTML = `<span class="err">Erro: ${res.error}</span>`; return; }
+
+  const MESES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const CANAIS_FAT = ['Lojinha','Safe Academy','Azul Pontos','Lito Academy'];
+  const data = res.data;
+
+  // Filtra mês se selecionado
+  const mesesExibir = mes ? [Number(mes)] : Array.from({length:12},(_,i)=>i+1);
+
+  let totalVendasComercial = 0;
+  let totalFat4Canais = 0;
+
+  const linhas = mesesExibir.filter(m => {
+    const d = data[m];
+    return d && Object.values(d).some(v => v > 0);
+  }).map(m => {
+    const d = data[m];
+    const fat4 = CANAIS_FAT.reduce((s,c) => s + (d[c]||0), 0);
+    totalFat4Canais += fat4;
+    totalVendasComercial += d['Vendas Comercial']||0;
+    return `<tr>
+      <td><strong>${MESES[m]}</strong></td>
+      <td>${fmt(d['Lojinha'])}</td>
+      <td>${fmt(d['Safe Academy'])}</td>
+      <td>${fmt(d['Azul Pontos'])}</td>
+      <td>${fmt(d['Lito Academy'])}</td>
+      <td style="color:#888">${fmt(d['Vendas Comercial'])}</td>
+      <td><strong>${fmt(d.total)}</strong></td>
+      <td class="ok"><strong>${fmt(fat4)}</strong></td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <table>
+      <tr><th>Mês</th><th>Lojinha</th><th>Safe Academy</th><th>Azul Pontos</th><th>Lito Academy</th><th>Vendas Comercial (info)</th><th>Total (backend)</th><th>Total 4 canais (correto)</th></tr>
+      ${linhas}
+    </table>
+    <div class="sum-box">
+      <strong>Soma 4 canais manuais: ${fmt(totalFat4Canais)}</strong><br>
+      <span style="color:#888;font-size:12px">Vendas Comercial (referência): ${fmt(totalVendasComercial)}</span>
+    </div>
+  `;
+}
+
+async function diagFatIds(ano) {
+  const el = document.getElementById('res-fat-ids');
+  el.innerHTML = '<em>Carregando...</em>';
+
+  // Chama sem mes para pegar todos do ano
+  const res = await API.getFaturamento(null, ano);
+  _fatIdsData = res;
+  if (!res.ok) { el.innerHTML = `<span class="err">Erro: ${res.error}</span><br><pre>${JSON.stringify(res)}</pre>`; return; }
+
+  const lista = res.data || [];
+
+  if (!lista.length) {
+    el.innerHTML = `<span class="err">⚠ Nenhum registro retornado!</span>
+      <p>Isso explica por que os botões de lixeira não aparecem. O problema está na chamada da API.</p>
+      <pre>${JSON.stringify(res, null, 2)}</pre>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <p class="ok">✓ ${lista.length} registros encontrados</p>
+    <table>
+      <tr><th>ID</th><th>Mês</th><th>Ano</th><th>Canal</th><th>Valor</th></tr>
+      ${lista.map(r => `<tr>
+        <td style="font-family:monospace;font-size:11px">${r.id}</td>
+        <td>${r.mes} <em style="color:#aaa">(tipo: ${typeof r.mes})</em></td>
+        <td>${r.ano}</td>
+        <td>${r.canal}</td>
+        <td>${fmt(r.valor)}</td>
+      </tr>`).join('')}
+    </table>
+    <details style="margin-top:8px"><summary style="cursor:pointer;color:#5BAEE2">JSON bruto</summary><pre>${JSON.stringify(res.data, null, 2)}</pre></details>
+  `;
+}
+
+function diagComparacao(mes, ano) {
+  const el = document.getElementById('res-comparacao');
+  if (!_kpiData || !_fatResumoData) { el.innerHTML = '<em>Rode o diagnóstico primeiro.</em>'; return; }
+
+  const kpiReceita = _kpiData.data?.totalReceita || 0;
+  const CANAIS_FAT = ['Lojinha','Safe Academy','Azul Pontos','Lito Academy'];
+  const fatData = _fatResumoData.data || {};
+
+  const mesesCalc = mes ? [Number(mes)] : Array.from({length:12},(_,i)=>i+1);
+  let fatVendasComercial = 0;
+  let fat4canais = 0;
+
+  mesesCalc.forEach(m => {
+    const d = fatData[m];
+    if (!d) return;
+    fatVendasComercial += d['Vendas Comercial']||0;
+    CANAIS_FAT.forEach(c => { fat4canais += d[c]||0; });
+  });
+
+  const globalCorreto = kpiReceita + fat4canais;
+  const diferenca = Math.abs(kpiReceita - fatVendasComercial);
+
+  el.innerHTML = `
+    <table>
+      <tr><th>Componente</th><th>Valor</th><th>Origem</th></tr>
+      <tr><td>Receita de Vendas (KPI)</td><td class="ok"><strong>${fmt(kpiReceita)}</strong></td><td>API kpis → totalReceita</td></tr>
+      <tr><td>Vendas Comercial (Faturamento)</td><td style="color:#888">${fmt(fatVendasComercial)}</td><td>API faturamento-resumo → Vendas Comercial</td></tr>
+      <tr><td>Diferença entre os dois</td><td ${diferenca > 1 ? 'class="err"' : 'class="ok"'}>${fmt(diferenca)}</td><td>${diferenca > 1 ? '⚠ Divergência — verificar causas abaixo' : '✓ Alinhados'}</td></tr>
+      <tr><td colspan="3" style="height:1px;background:#eee;padding:0"></td></tr>
+      <tr><td>Fat. 4 canais manuais (Lojinha+Academy+Azul+Lito)</td><td>${fmt(fat4canais)}</td><td>API faturamento-resumo</td></tr>
+      <tr><td><strong>Receita Global = Vendas + Fat. 4 canais</strong></td><td><strong class="ok">${fmt(globalCorreto)}</strong></td><td>Cálculo correto</td></tr>
+    </table>
+
+    <div style="margin-top:16px;padding:16px;background:#fff8e1;border:2px solid #f39c12;border-radius:8px;font-size:13px">
+      <strong>Possíveis causas da divergência KPI vs Vendas Comercial:</strong><br><br>
+      1. <strong>Período diferente</strong>: KPI filtra por mês/ano exato; Faturamento pode estar somando meses extras<br>
+      2. <strong>Parser de valor</strong>: valores salvos como texto com vírgula ("1.234,56") podem não parsear igual nos dois lados<br>
+      3. <strong>Vendas sem mês/ano</strong>: vendas com campo MES ou ANO vazio não são filtradas pelo KPI mas aparecem no faturamento<br>
+      4. <strong>Fuso horário</strong>: vendas criadas próximas da meia-noite podem ter mes/ano errado na coluna vs na data<br>
+      <br>
+      → Olhe a tabela de Vendas brutas acima e compare os valores parseados. Se tiver venda com "valor bruto" estranho, esse é o culpado.
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
