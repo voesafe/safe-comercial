@@ -214,6 +214,11 @@ const Auth = {
       document.querySelectorAll('[data-pac-only]').forEach(el => el.style.display = 'none');
     }
 
+    // Itens visíveis apenas para o perfil Master TI
+    if (!this.perfilEhMaster(sessao.perfil)) {
+      document.querySelectorAll('[data-master-only]').forEach(el => el.style.display = 'none');
+    }
+
     if (!this.podeEditar()) {
       document.querySelectorAll('[data-write-only]').forEach(el => el.style.display = 'none');
     }
