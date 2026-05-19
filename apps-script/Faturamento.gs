@@ -43,18 +43,6 @@ function canalFaturamento(valor) {
 
 function mesFaturamento(valor) {
   var nome = normalizarTextoFaturamento(valor);
-  if (nome.indexOf('jan') === 0) return 1;
-  if (nome.indexOf('fev') === 0) return 2;
-  if (nome.indexOf('mar') === 0) return 3;
-  if (nome.indexOf('abr') === 0) return 4;
-  if (nome.indexOf('mai') === 0) return 5;
-  if (nome.indexOf('jun') === 0) return 6;
-  if (nome.indexOf('jul') === 0) return 7;
-  if (nome.indexOf('ago') === 0) return 8;
-  if (nome.indexOf('set') === 0) return 9;
-  if (nome.indexOf('out') === 0) return 10;
-  if (nome.indexOf('nov') === 0) return 11;
-  if (nome.indexOf('dez') === 0) return 12;
   return MESES_FATURAMENTO[nome] || null;
 }
 
