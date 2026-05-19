@@ -18,7 +18,6 @@ function doGet(e) {
 
     switch (action) {
 
-      // Admin vê todos (null = sem filtro de PAC); PAC vê só os próprios
       case 'kpis':
         return jsonSuccess(calcularKPIs(perfilEhAdmin(perfil) ? null : pac, perfil, mes, ano));
 
@@ -31,9 +30,11 @@ function doGet(e) {
         return jsonSuccess(buscarVenda(id));
 
       case 'faturamento':
+        if (!perfilEhAdmin(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(listarFaturamento(mes, ano));
 
       case 'faturamento-resumo':
+        if (!perfilEhAdmin(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(resumoFaturamento(ano));
 
       case 'usuarios':
@@ -46,9 +47,13 @@ function doGet(e) {
       case 'canais':
         return jsonSuccess(CANAIS);
 
+      // Concorrência — todos os logados podem ver
       case 'listar-concorrencia':
-        if (!perfilEhAdmin(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(listarConcorrencia());
+
+      // Preços SAFE — todos os logados podem ver
+      case 'listar-precos-safe':
+        return jsonSuccess(listarPrecosSafe());
 
       default:
         return jsonError('Ação desconhecida: ' + action);
@@ -69,16 +74,21 @@ function doPost(e) {
 
     switch (action) {
 
+      // ── Auth ───────────────────────────────────────────────
       case 'login':
-        var usuario = login(dados.pac, dados.senha);
-        if (!usuario) return jsonError('PAC ou senha incorretos');
+        // Aceita email ou pac para compatibilidade
+        var identificador = dados.email || dados.pac;
+        var usuario = login(identificador, dados.senha);
+        if (!usuario) return jsonError('E-mail ou senha incorretos');
         return jsonSuccess(usuario);
 
       case 'alterar-senha':
-        var ok = alterarSenha(pac, dados.senhaAtual, dados.novaSenha);
+        var sessao = pac; // usa o email da sessão
+        var ok = alterarSenha(dados.email || pac, dados.senhaAtual, dados.novaSenha);
         if (!ok) return jsonError('Senha atual incorreta');
         return jsonSuccess({ mensagem: 'Senha alterada com sucesso' });
 
+      // ── Vendas ─────────────────────────────────────────────
       case 'criar-venda':
         if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
         if (!perfilEhAdminCompleto(perfil)) dados.pac = pac;
@@ -91,10 +101,12 @@ function doPost(e) {
         if (!atualizado) return jsonError('Venda não encontrada');
         return jsonSuccess({ mensagem: 'Venda atualizada' });
 
+      // ── Faturamento ────────────────────────────────────────
       case 'salvar-faturamento':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(salvarFaturamento(dados.mes, dados.ano, dados.canal, dados.valor));
 
+      // ── Usuários ───────────────────────────────────────────
       case 'criar-usuario':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(criarUsuario(dados));
@@ -106,19 +118,26 @@ function doPost(e) {
         if (!editado) return jsonError('Usuário não encontrado');
         return jsonSuccess({ mensagem: 'Usuário atualizado' });
 
-      case 'criar-concorrencia':
-        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
-        return jsonSuccess(criarConcorrencia(dados));
+      // ── Concorrência — PAC pode criar/editar, só admin pode excluir ──
+      case 'criar-concorrente':
+        if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
+        return jsonSuccess(criarConcorrente(dados, pac));
 
-      case 'editar-concorrencia':
+      case 'editar-concorrente':
+        if (perfilSomenteLeitura(perfil)) return jsonError('Acesso somente leitura');
+        if (!dados.id) return jsonError('ID obrigatório');
+        return jsonSuccess(editarConcorrente(dados.id, dados));
+
+      case 'excluir-concorrente':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         if (!dados.id) return jsonError('ID obrigatório');
-        return jsonSuccess(editarConcorrencia(dados));
+        return jsonSuccess(excluirConcorrente(dados.id));
 
-      case 'excluir-concorrencia':
+      // ── Preços SAFE — só admin completo edita ─────────────
+      case 'salvar-preco-safe':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
-        if (!dados.id) return jsonError('ID obrigatório');
-        return jsonSuccess(excluirConcorrencia(dados.id));
+        if (!dados.curso) return jsonError('Curso obrigatório');
+        return jsonSuccess(salvarPrecoSafe(dados));
 
       default:
         return jsonError('Ação desconhecida: ' + action);

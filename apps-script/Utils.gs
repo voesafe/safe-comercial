@@ -9,7 +9,8 @@ var SHEETS = {
   USUARIOS:     'USUARIOS',
   VENDAS:       'VENDAS',
   FATURAMENTO:  'FATURAMENTO',
-  CONCORRENCIA: 'CONCORRENCIA'
+  CONCORRENCIA: 'CONCORRENCIA',
+  PRECOS_SAFE:  'PRECOS_SAFE'
 };
 
 /**
@@ -40,9 +41,6 @@ function jsonError(msg) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/**
- * Normaliza valores de perfil para comparações consistentes
- */
 function normalizarPerfil(perfil) {
   return String(perfil || '').trim().toLowerCase().replace(/-/g, '_');
 }
@@ -66,7 +64,7 @@ function valorBooleano(valor) {
 }
 
 /**
- * Hash SHA-256 simples usando Utilities do Apps Script
+ * Hash SHA-256 usando Utilities do Apps Script
  */
 function hashSenha(senha) {
   var bytes = Utilities.computeDigest(
@@ -132,11 +130,10 @@ function inicializarPlanilha() {
   if (!usuarios) {
     usuarios = ss.insertSheet(SHEETS.USUARIOS);
     usuarios.appendRow(['ID', 'NOME', 'PAC', 'EMAIL', 'SENHA_HASH', 'PERFIL', 'ATIVO', 'CRIADO_EM']);
-    // Cria usuários padrão (senha inicial: safe@2024)
     var senhaHash = hashSenha('safe@2024');
-    usuarios.appendRow([gerarId(), 'Thiago',  'Thiago',  'thiago@voesafe.com.br',  senhaHash, 'admin', true, new Date()]);
-    usuarios.appendRow([gerarId(), 'Marlon',  'Marlon',  'marlon@voesafe.com.br',  senhaHash, 'pac',   true, new Date()]);
-    usuarios.appendRow([gerarId(), 'Adauto',  'Adauto',  'adauto@voesafe.com.br',  senhaHash, 'pac',   true, new Date()]);
+    usuarios.appendRow([gerarId(), 'Thiago', 'Thiago', 'thiago@voesafe.com.br', senhaHash, 'admin', true, new Date()]);
+    usuarios.appendRow([gerarId(), 'Marlon', 'Marlon', 'marlon@voesafe.com.br', senhaHash, 'pac',   true, new Date()]);
+    usuarios.appendRow([gerarId(), 'Adauto', 'Adauto', 'adauto@voesafe.com.br', senhaHash, 'pac',   true, new Date()]);
   }
 
   // VENDAS
@@ -157,11 +154,25 @@ function inicializarPlanilha() {
     fat.appendRow(['ID', 'MES', 'ANO', 'CANAL', 'VALOR', 'ATUALIZADO_EM']);
   }
 
-  // CONCORRENCIA
+  // CONCORRENCIA (nova estrutura)
   var conc = ss.getSheetByName(SHEETS.CONCORRENCIA);
   if (!conc) {
     conc = ss.insertSheet(SHEETS.CONCORRENCIA);
-    conc.appendRow(['ID', 'ESCOLA', 'VENDEDOR', 'CURSO', 'VALOR', 'ATUALIZADO_EM']);
+    conc.appendRow([
+      'ID', 'CONCORRENTE', 'CURSO', 'VALOR_AVISTA',
+      'VALOR_PARCELADO', 'PARCELAS', 'AERONAVE', 'OBS',
+      'CADASTRADO_POR', 'CRIADO_EM', 'ATUALIZADO_EM'
+    ]);
+  }
+
+  // PRECOS_SAFE (nova aba)
+  var precos = ss.getSheetByName(SHEETS.PRECOS_SAFE);
+  if (!precos) {
+    precos = ss.insertSheet(SHEETS.PRECOS_SAFE);
+    precos.appendRow([
+      'ID', 'CURSO', 'VALOR_AVISTA', 'VALOR_PARCELADO',
+      'PARCELAS', 'ATUALIZADO_EM'
+    ]);
   }
 
   return 'Planilha inicializada com sucesso!';

@@ -1,12 +1,13 @@
 // ============================================================
 // Auth.gs — Autenticação e gestão de usuários
 // SAFE Escola de Aviação | Dashboard Comercial
+// Login por e-mail + senha (atualizado)
 // ============================================================
 
 /**
- * Valida login e retorna dados do usuário
+ * Valida login por e-mail e retorna dados do usuário
  */
-function login(pac, senha) {
+function login(email, senha) {
   try {
     var sheet = getSheet(SHEETS.USUARIOS);
     var data = sheet.getDataRange().getValues();
@@ -14,11 +15,11 @@ function login(pac, senha) {
 
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      var rowPac    = String(row[2]).trim().toLowerCase();
+      var rowEmail  = String(row[3]).trim().toLowerCase();
       var rowHash   = String(row[4]).trim();
       var rowAtivo  = row[6];
 
-      if (rowPac === pac.trim().toLowerCase() && rowHash === hash && valorBooleano(rowAtivo)) {
+      if (rowEmail === email.trim().toLowerCase() && rowHash === hash && valorBooleano(rowAtivo)) {
         return {
           id:     row[0],
           nome:   row[1],
@@ -35,7 +36,7 @@ function login(pac, senha) {
 }
 
 /**
- * Lista usuários ativos para preencher o seletor de login
+ * Lista usuários ativos para preencher seletor de PAC nos formulários
  */
 function listarUsuariosLogin() {
   var sheet = getSheet(SHEETS.USUARIOS);
@@ -48,6 +49,7 @@ function listarUsuariosLogin() {
     usuarios.push({
       nome:   row[1],
       pac:    row[2],
+      email:  row[3],
       perfil: row[5]
     });
   }
@@ -128,19 +130,19 @@ function atualizarUsuario(id, dados) {
 }
 
 /**
- * Altera senha do próprio usuário
+ * Altera senha do próprio usuário (busca por e-mail)
  */
-function alterarSenha(pac, senhaAtual, novaSenha) {
+function alterarSenha(email, senhaAtual, novaSenha) {
   var sheet = getSheet(SHEETS.USUARIOS);
   var data = sheet.getDataRange().getValues();
   var hashAtual = hashSenha(senhaAtual);
   var hashNova  = hashSenha(novaSenha);
 
   for (var i = 1; i < data.length; i++) {
-    var rowPac  = String(data[i][2]).trim().toLowerCase();
-    var rowHash = String(data[i][4]).trim();
+    var rowEmail = String(data[i][3]).trim().toLowerCase();
+    var rowHash  = String(data[i][4]).trim();
 
-    if (rowPac === pac.trim().toLowerCase() && rowHash === hashAtual) {
+    if (rowEmail === String(email).trim().toLowerCase() && rowHash === hashAtual) {
       sheet.getRange(i + 1, 5).setValue(hashNova);
       return true;
     }

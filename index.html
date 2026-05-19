@@ -22,58 +22,26 @@
     }
 
     /* Plano de fundo decorativo */
-    .bg-decor {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .bg-circle {
-      position: absolute;
-      border-radius: 50%;
-      opacity: .07;
-    }
-    .bg-circle-1 {
-      width: 600px; height: 600px;
-      background: var(--blue);
-      top: -200px; right: -150px;
-    }
-    .bg-circle-2 {
-      width: 400px; height: 400px;
-      background: var(--teal);
-      bottom: -150px; left: -100px;
-    }
+    .bg-decor { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .bg-circle { position: absolute; border-radius: 50%; opacity: .07; }
+    .bg-circle-1 { width: 600px; height: 600px; background: var(--blue); top: -200px; right: -150px; }
+    .bg-circle-2 { width: 400px; height: 400px; background: var(--teal); bottom: -150px; left: -100px; }
     .bg-lines {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image:
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 60px,
-          rgba(255,255,255,.015) 60px,
-          rgba(255,255,255,.015) 61px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 60px,
-          rgba(255,255,255,.015) 60px,
-          rgba(255,255,255,.015) 61px
-        );
+        repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,.015) 60px, rgba(255,255,255,.015) 61px),
+        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,.015) 60px, rgba(255,255,255,.015) 61px);
     }
 
-    /* Card de login */
+    /* Card */
     .login-card {
-      position: relative;
-      z-index: 1;
+      position: relative; z-index: 1;
       background: rgba(255,255,255,.04);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255,255,255,.08);
       border-radius: var(--radius-xl);
       padding: clamp(28px, 5vh, 48px) clamp(22px, 5vw, 44px);
-      width: 100%;
-      max-width: 420px;
+      width: 100%; max-width: 420px;
       box-shadow: 0 24px 64px rgba(0,0,0,.4);
       animation: fadeUp .5s cubic-bezier(.4,0,.2,1);
     }
@@ -83,156 +51,118 @@
     }
 
     .login-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       margin-bottom: 36px;
     }
     .login-logo img {
-      width: 68px; height: 68px;
-      border-radius: 50%;
+      width: 68px; height: 68px; border-radius: 50%;
       margin-bottom: 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,.3);
     }
     .login-logo-name {
-      font-family: var(--font-title);
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: var(--white);
-      letter-spacing: .02em;
+      font-family: var(--font-title); font-size: 1.6rem;
+      font-weight: 800; color: var(--white); letter-spacing: .02em;
     }
     .login-logo-sub {
-      font-size: .75rem;
-      color: rgba(255,255,255,.4);
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-top: 4px;
+      font-size: .75rem; color: rgba(255,255,255,.4);
+      text-transform: uppercase; letter-spacing: .12em; margin-top: 4px;
     }
 
     .login-title {
-      font-family: var(--font-title);
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 6px;
+      font-family: var(--font-title); font-size: 1.05rem;
+      font-weight: 700; color: var(--white); margin-bottom: 6px;
     }
-    .login-sub {
-      font-size: .82rem;
-      color: rgba(255,255,255,.4);
-      margin-bottom: 28px;
-    }
+    .login-sub { font-size: .82rem; color: rgba(255,255,255,.4); margin-bottom: 28px; }
 
     .login-label {
-      font-size: .75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: rgba(255,255,255,.5);
-      margin-bottom: 6px;
-      display: block;
+      font-size: .75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .07em; color: rgba(255,255,255,.5);
+      margin-bottom: 6px; display: block;
     }
+
+    /* Input wrapper com ícone */
+    .input-wrap {
+      position: relative; margin-bottom: 16px;
+    }
+    .input-wrap .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,.3); display: flex; align-items: center;
+      pointer-events: none;
+    }
+    .input-wrap .input-icon svg { width: 16px; height: 16px; }
+
     .login-input {
-      width: 100%;
-      padding: 12px 16px;
+      width: 100%; padding: 12px 16px 12px 42px;
       background: rgba(255,255,255,.07);
       border: 1.5px solid rgba(255,255,255,.1);
       border-radius: var(--radius-sm);
-      color: var(--white);
-      font-size: .95rem;
-      font-family: var(--font-body);
-      outline: none;
+      color: var(--white); font-size: .95rem;
+      font-family: var(--font-body); outline: none;
       transition: var(--transition);
-      margin-bottom: 16px;
     }
     .login-input:focus {
       border-color: var(--blue);
       background: rgba(91,174,226,.08);
       box-shadow: 0 0 0 3px rgba(91,174,226,.12);
     }
+    .login-input:focus + .input-focus-ring { opacity: 1; }
     .login-input::placeholder { color: rgba(255,255,255,.2); }
 
+    /* Toggle senha */
+    .input-wrap .toggle-senha {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,.3); cursor: pointer; display: flex;
+      align-items: center; padding: 4px;
+      transition: color .2s;
+    }
+    .input-wrap .toggle-senha:hover { color: rgba(255,255,255,.6); }
+    .input-wrap .toggle-senha svg { width: 16px; height: 16px; }
+
+    .login-input-senha { padding-right: 42px; }
+
     .login-btn {
-      width: 100%;
-      padding: 13px;
+      width: 100%; padding: 13px;
       background: linear-gradient(135deg, var(--blue), var(--teal));
-      color: var(--white);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-title);
-      font-size: .95rem;
-      font-weight: 700;
-      letter-spacing: .03em;
+      color: var(--white); border-radius: var(--radius-sm);
+      font-family: var(--font-title); font-size: .95rem;
+      font-weight: 700; letter-spacing: .03em;
       transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 8px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 8px;
     }
     .login-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 8px 24px rgba(91,174,226,.35);
     }
-    .login-btn:disabled { opacity: .6; }
+    .login-btn:disabled { opacity: .6; pointer-events: none; }
+    .login-btn .spinner {
+      width: 18px; height: 18px;
+      border-width: 2px;
+    }
 
     .login-error {
       background: rgba(231,76,60,.12);
       border: 1px solid rgba(231,76,60,.25);
       border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      color: #ff8a80;
-      font-size: .82rem;
-      margin-top: 14px;
-      display: none;
+      padding: 10px 14px; color: #ff8a80;
+      font-size: .82rem; margin-top: 14px;
+      display: none; align-items: center; gap: 8px;
     }
-    .login-error.show { display: block; }
+    .login-error.show { display: flex; }
+    .login-error svg { width: 16px; height: 16px; flex-shrink: 0; }
 
     .login-footer {
-      margin-top: 32px;
-      padding-top: 20px;
+      margin-top: 32px; padding-top: 20px;
       border-top: 1px solid rgba(255,255,255,.06);
-      text-align: center;
-      font-size: .72rem;
+      text-align: center; font-size: .72rem;
       color: rgba(255,255,255,.25);
     }
-
-    /* Select customizado para PAC */
-    .login-select {
-      width: 100%;
-      padding: 12px 16px;
-      background: rgba(255,255,255,.07);
-      border: 1.5px solid rgba(255,255,255,.1);
-      border-radius: var(--radius-sm);
-      color: var(--white);
-      font-size: .95rem;
-      font-family: var(--font-body);
-      outline: none;
-      transition: var(--transition);
-      margin-bottom: 16px;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      padding-right: 36px;
-      cursor: pointer;
-      min-width: 0;
-    }
-    .login-select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(91,174,226,.12);
-    }
-    .login-select option { background: var(--navy); color: var(--white); }
 
     @media (max-width: 480px), (max-height: 720px) {
       body { align-items: flex-start; }
       .login-logo { margin-bottom: 24px; }
-      .login-logo img {
-        width: 56px;
-        height: 56px;
-      }
-      .login-footer {
-        margin-top: 24px;
-        padding-top: 16px;
-      }
+      .login-logo img { width: 56px; height: 56px; }
+      .login-footer { margin-top: 24px; padding-top: 16px; }
     }
   </style>
 </head>
@@ -252,31 +182,70 @@
     </div>
 
     <div class="login-title">Acesso ao Dashboard</div>
-    <div class="login-sub">Entre com suas credenciais comerciais</div>
+    <div class="login-sub">Entre com seu e-mail e senha</div>
 
-    <label class="login-label">Usuário</label>
-    <select class="login-select" id="inp-pac">
-      <option value="" disabled selected>Selecione</option>
-      <option value="Thiago">Thiago</option>
-      <option value="Marlon">Marlon</option>
-      <option value="Adauto">Adauto</option>
-      <option value="Ramos">Ramos</option>
-    </select>
+    <label class="login-label" for="inp-email">E-mail</label>
+    <div class="input-wrap">
+      <span class="input-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+        </svg>
+      </span>
+      <input
+        type="email"
+        class="login-input"
+        id="inp-email"
+        placeholder="seu@email.com.br"
+        autocomplete="email"
+        inputmode="email"
+      >
+    </div>
 
-    <label class="login-label">Senha</label>
-    <input
-      type="password"
-      class="login-input"
-      id="inp-senha"
-      placeholder="••••••••"
-      autocomplete="current-password"
-    >
+    <label class="login-label" for="inp-senha">Senha</label>
+    <div class="input-wrap">
+      <span class="input-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </span>
+      <input
+        type="password"
+        class="login-input login-input-senha"
+        id="inp-senha"
+        placeholder="••••••••"
+        autocomplete="current-password"
+      >
+      <button class="toggle-senha" id="toggle-senha" type="button" title="Mostrar/ocultar senha">
+        <svg id="icon-olho-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <svg id="icon-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+      </button>
+    </div>
 
     <button class="login-btn" id="btn-login">
-      Entrar no Dashboard
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+        <polyline points="10 17 15 12 10 7"></polyline>
+        <line x1="15" y1="12" x2="3" y2="12"></line>
+      </svg>
+      <span id="btn-login-label">Entrar no Dashboard</span>
     </button>
 
-    <div class="login-error" id="login-error"></div>
+    <div class="login-error" id="login-error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span id="login-error-msg"></span>
+    </div>
 
     <div class="login-footer">
       SAFE Escola de Aviação &copy; 2025 &mdash; Dashboard Comercial
@@ -285,7 +254,7 @@
 
   <script src="js/config.js"></script>
   <script>
-    // Auth inline (sem dependência de auth.js ainda)
+    // Redireciona se já estiver logado
     const sessao = sessionStorage.getItem(CONFIG.SESSION_KEY);
     if (sessao) window.location.href = 'dashboard.html';
   </script>
@@ -293,119 +262,86 @@
   <script src="js/auth.js"></script>
   <script>
     const btnLogin  = document.getElementById('btn-login');
-    const inpPac    = document.getElementById('inp-pac');
+    const btnLabel  = document.getElementById('btn-login-label');
+    const inpEmail  = document.getElementById('inp-email');
     const inpSenha  = document.getElementById('inp-senha');
     const errEl     = document.getElementById('login-error');
+    const errMsg    = document.getElementById('login-error-msg');
+    const toggleBtn = document.getElementById('toggle-senha');
+
+    // Toggle mostrar/ocultar senha
+    toggleBtn.addEventListener('click', () => {
+      const visible = inpSenha.type === 'text';
+      inpSenha.type = visible ? 'password' : 'text';
+      document.getElementById('icon-olho-aberto').style.display  = visible ? '' : 'none';
+      document.getElementById('icon-olho-fechado').style.display = visible ? 'none' : '';
+    });
 
     function mostrarErro(msg) {
-      errEl.textContent = msg;
+      errMsg.textContent = msg;
       errEl.classList.add('show');
-    }
-    function limparErro() {
-      errEl.classList.remove('show');
-    }
-
-    const usuariosFallback = Array.from(
-      inpPac.querySelectorAll('option:not([disabled])')
-    ).map(option => ({ nome: option.textContent.trim(), pac: option.value }));
-    const usuariosCacheKey = `${CONFIG.SESSION_KEY}_login_users`;
-
-    function normalizarUsuariosLogin(usuarios) {
-      const porPac = new Map();
-
-      (usuarios || []).forEach(usuario => {
-        const pac = String(usuario.pac || '').trim();
-        if (!pac) return;
-        porPac.set(pac.toLowerCase(), { ...usuario, pac });
-      });
-
-      return Array.from(porPac.values())
-        .sort((a, b) => a.pac.localeCompare(b.pac, 'pt-BR'));
+      inpEmail.style.borderColor = '';
+      inpSenha.style.borderColor = '';
+      // Shake no card
+      const card = document.querySelector('.login-card');
+      card.style.animation = 'none';
+      requestAnimationFrame(() => { card.style.animation = 'shake .4s ease'; });
     }
 
-    function getUsuariosCache() {
-      try {
-        const raw = localStorage.getItem(usuariosCacheKey);
-        return raw ? normalizarUsuariosLogin(JSON.parse(raw)) : [];
-      } catch {
-        return [];
-      }
-    }
+    function limparErro() { errEl.classList.remove('show'); }
 
-    function salvarUsuariosCache(usuarios) {
-      try {
-        localStorage.setItem(usuariosCacheKey, JSON.stringify(normalizarUsuariosLogin(usuarios)));
-      } catch {}
-    }
-
-    function preencherUsuariosLogin(usuarios) {
-      const valorAtual = inpPac.value;
-      const lista = normalizarUsuariosLogin(usuarios);
-      inpPac.innerHTML = '';
-
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.disabled = true;
-      placeholder.selected = true;
-      placeholder.textContent = 'Selecione';
-      inpPac.appendChild(placeholder);
-
-      lista.forEach(usuario => {
-        const option = document.createElement('option');
-        option.value = usuario.pac;
-        option.textContent = usuario.pac;
-        inpPac.appendChild(option);
-      });
-
-      if (valorAtual && lista.some(usuario => usuario.pac === valorAtual)) {
-        inpPac.value = valorAtual;
-      }
-    }
-
-    async function carregarUsuariosLogin() {
-      const cache = getUsuariosCache();
-      preencherUsuariosLogin(cache.length ? cache : usuariosFallback);
-
-      try {
-        const res = await API.getUsuariosLogin();
-        if (res.ok && Array.isArray(res.data) && res.data.length) {
-          salvarUsuariosCache(res.data);
-          preencherUsuariosLogin(res.data);
-        }
-      } catch {
-        preencherUsuariosLogin(usuariosFallback);
+    function setLoading(on) {
+      btnLogin.disabled = on;
+      if (on) {
+        btnLabel.textContent = 'Entrando...';
+        btnLogin.insertAdjacentHTML('afterbegin', '<span class="spinner" style="margin-right:8px"></span>');
+      } else {
+        btnLabel.textContent = 'Entrar no Dashboard';
+        const sp = btnLogin.querySelector('.spinner');
+        if (sp) sp.remove();
       }
     }
 
     async function fazerLogin() {
-      const pac   = inpPac.value.trim();
+      const email = inpEmail.value.trim();
       const senha = inpSenha.value;
 
-      if (!pac)   { mostrarErro('Selecione seu nome.'); return; }
-      if (!senha) { mostrarErro('Digite sua senha.'); return; }
+      if (!email) { mostrarErro('Digite seu e-mail.'); inpEmail.focus(); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { mostrarErro('E-mail inválido.'); inpEmail.focus(); return; }
+      if (!senha)  { mostrarErro('Digite sua senha.'); inpSenha.focus(); return; }
 
       limparErro();
-      btnLoading(btnLogin, true);
+      setLoading(true);
 
-      const res = await Auth.login(pac, senha);
-
-      btnLoading(btnLogin, false);
+      const res = await Auth.login(email, senha);
+      setLoading(false);
 
       if (res.ok) {
         window.location.href = 'dashboard.html';
       } else {
-        mostrarErro(res.error || 'PAC ou senha incorretos.');
+        mostrarErro(res.error || 'E-mail ou senha incorretos.');
         inpSenha.value = '';
         inpSenha.focus();
       }
     }
 
     btnLogin.addEventListener('click', fazerLogin);
-    inpSenha.addEventListener('keydown', e => {
-      if (e.key === 'Enter') fazerLogin();
-    });
-    inpPac.addEventListener('change', limparErro);
-    carregarUsuariosLogin();
+    inpSenha.addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+    inpEmail.addEventListener('keydown', e => { if (e.key === 'Enter') inpSenha.focus(); });
+    [inpEmail, inpSenha].forEach(el => el.addEventListener('input', limparErro));
+
+    // Animação shake para erro
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%,100% { transform: translateX(0); }
+        20%      { transform: translateX(-8px); }
+        40%      { transform: translateX(8px); }
+        60%      { transform: translateX(-5px); }
+        80%      { transform: translateX(5px); }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>

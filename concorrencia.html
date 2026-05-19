@@ -9,10 +9,270 @@
   <link rel="apple-touch-icon" href="assets/img/logo.png">
   <link rel="stylesheet" href="css/safe-theme.css">
   <link rel="stylesheet" href="css/layout.css">
+  <style>
+    /* ── Comparativo por curso ─────────────────────────────── */
+    .conc-bloco {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .conc-bloco-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--navy);
+      gap: 12px;
+    }
+
+    .conc-curso-titulo {
+      font-family: var(--font-title);
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--white);
+      margin: 0;
+    }
+
+    .conc-count {
+      font-size: .72rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.45);
+      white-space: nowrap;
+    }
+
+    /* ── Grid de colunas ───────────────────────────────────── */
+    .conc-tabela { width: 100%; }
+
+    .conc-thead,
+    .conc-row,
+    .conc-safe-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 2fr 80px;
+      align-items: center;
+      gap: 0;
+      padding: 0 20px;
+    }
+
+    .conc-thead {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .conc-thead > div {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-400);
+    }
+
+    /* Linha SAFE — destaque */
+    .conc-safe-row {
+      background: linear-gradient(90deg, rgba(96,192,191,.06), rgba(91,174,226,.04));
+      border-left: 3px solid var(--teal);
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+
+    /* Linha concorrente */
+    .conc-row {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .15s;
+    }
+    .conc-row:hover { background: var(--off-white); }
+    .conc-row:last-of-type { border-bottom: none; }
+
+    .conc-separador {
+      height: 1px;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      opacity: .25;
+      margin: 0 20px;
+    }
+
+    /* Células */
+    .conc-escola-nome {
+      font-weight: 600;
+      font-size: .875rem;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .conc-by {
+      font-size: .72rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .conc-aeronave {
+      font-size: .72rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .conc-valor {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .conc-valor > span:first-child:not(.text-muted),
+    .conc-valor > .conc-val-num {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--navy);
+    }
+
+    .conc-safe-row .conc-valor > span:first-child:not(.text-muted) {
+      color: var(--teal-dark);
+    }
+
+    .conc-label {
+      font-size: .7rem;
+      color: var(--gray-400);
+      font-weight: 500;
+    }
+
+    .conc-aeronave-col {
+      font-size: .85rem;
+      color: var(--gray-500);
+    }
+
+    .conc-obs {
+      font-size: .82rem;
+      color: var(--gray-500);
+    }
+
+    .conc-obs-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .conc-acoes {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    /* Estados vazios dentro do bloco */
+    .conc-vazio-curso {
+      padding: 24px 20px;
+      font-size: .85rem;
+      color: var(--gray-400);
+      font-style: italic;
+      border-top: 1px dashed var(--gray-200);
+    }
+
+    .conc-safe-vazio {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(243,156,18,.04);
+      border-left: 3px solid var(--warning);
+      font-size: .85rem;
+      color: var(--gray-500);
+    }
+
+    /* ── Filtro topo ───────────────────────────────────────── */
+    .filtro-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filtro-bar select {
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: .875rem;
+      font-family: var(--font-body);
+      color: var(--navy);
+      background: var(--white);
+      outline: none;
+      transition: var(--transition);
+      min-width: 220px;
+    }
+    .filtro-bar select:focus { border-color: var(--blue); }
+
+    /* ── Loading overlay ───────────────────────────────────── */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(244,247,252,.75);
+      backdrop-filter: blur(2px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .loading-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      padding: 24px 32px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+    }
+    .loading-card p {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .conc-thead,
+      .conc-row,
+      .conc-safe-row {
+        grid-template-columns: 2fr 1fr 1fr 60px;
+      }
+      .conc-aeronave-col,
+      .conc-obs { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .conc-thead,
+      .conc-row,
+      .conc-safe-row {
+        grid-template-columns: 1fr 1fr 48px;
+      }
+      .conc-thead > div:nth-child(3),
+      .conc-row > div:nth-child(3),
+      .conc-safe-row > div:nth-child(3) { display: none; }
+    }
+  </style>
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="loading-card">
+    <img src="assets/img/logo.png" alt="SAFE" style="width:40px;height:40px;border-radius:50%;animation:spin .9s linear infinite">
+    <p>Carregando...</p>
+  </div>
+</div>
+
 <div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <img src="assets/img/logo.png" alt="SAFE">
@@ -21,23 +281,33 @@
         <span class="sidebar-brand-sub">Comercial</span>
       </div>
     </div>
-    <div class="sidebar-toggle" id="sidebar-toggle">‹</div>
+    <div class="sidebar-toggle" id="sidebar-toggle" title="Recolher menu">‹</div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
-      <a href="dashboard.html" class="nav-item"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></a>
-      <a href="vendas.html" class="nav-item"><span class="nav-icon">◎</span><span class="nav-label">Vendas</span></a>
-      <hr class="nav-divider">
-      <div class="nav-section-label">Administração</div>
-      <a href="faturamento.html" class="nav-item"><span class="nav-icon">◉</span><span class="nav-label">Faturamento</span></a>
-      <a href="concorrencia.html" class="nav-item active"><span class="nav-icon">◐</span><span class="nav-label">Concorrência</span></a>
-      <a href="admin.html" class="nav-item"><span class="nav-icon">◑</span><span class="nav-label">Usuários</span></a>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-icon"></span><span class="nav-label">Dashboard</span>
+      </a>
+      <a href="vendas.html" class="nav-item">
+        <span class="nav-icon"></span><span class="nav-label">Vendas</span>
+      </a>
+      <hr class="nav-divider" data-admin-only>
+      <div class="nav-section-label" data-admin-only>Administração</div>
+      <a href="faturamento.html" class="nav-item" data-admin-only>
+        <span class="nav-icon"></span><span class="nav-label">Faturamento</span>
+      </a>
+      <a href="concorrencia.html" class="nav-item active">
+        <span class="nav-icon"></span><span class="nav-label">Concorrência</span>
+      </a>
+      <a href="admin.html" class="nav-item" data-admin-only>
+        <span class="nav-icon"></span><span class="nav-label">Usuários</span>
+      </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="sidebar-user" id="btn-logout">
-        <div class="sidebar-avatar">T</div>
+      <div class="sidebar-user" id="sidebar-user-current">
+        <div class="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name">Thiago</div>
-          <div class="sidebar-user-role">Administrador</div>
+          <div class="sidebar-user-name">Carregando...</div>
+          <div class="sidebar-user-role">—</div>
         </div>
       </div>
     </div>
@@ -45,297 +315,146 @@
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
+  <!-- ── Main ─────────────────────────────────────────────── -->
   <main class="main" id="main">
     <div class="topbar">
       <div class="topbar-left">
         <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
         <div>
           <div class="topbar-title">Concorrência</div>
-          <div class="topbar-subtitle">Comparativo de preços com outras escolas</div>
+          <div class="topbar-subtitle">Comparativo de preços do mercado</div>
         </div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary" id="btn-novo" data-write-only>+ Adicionar</button>
+        <button class="btn btn-primary" id="btn-nova-concorrente" data-write-only>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Concorrente
+        </button>
       </div>
     </div>
 
     <div class="page">
 
-      <!-- Cards de resumo por escola -->
-      <div id="cards-escolas" class="grid-kpis mb-24"></div>
+      <!-- Filtro -->
+      <div class="filtro-bar">
+        <select id="filtro-curso">
+          <option value="">Todos os cursos</option>
+        </select>
+      </div>
 
-      <!-- Tabela completa -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Tabela comparativa</div>
-          <input type="text" id="busca" class="form-control"
-            placeholder="Buscar escola, curso..."
-            style="max-width:260px">
-        </div>
-        <div class="table-wrapper">
-          <table class="table table-concorrencia">
-            <thead>
-              <tr>
-                <th class="col-escola">Escola</th>
-                <th class="col-vendedor">Vendedor / Fonte</th>
-                <th class="col-curso">Curso</th>
-                <th class="col-valor" style="text-align:right">Valor</th>
-                <th style="width:80px"></th>
-              </tr>
-            </thead>
-            <tbody id="tabela-conc">
-              <tr><td colspan="5" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <!-- Comparativo -->
+      <div id="comparativo-container">
+        <!-- Renderizado via JS -->
       </div>
 
     </div>
   </main>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modal-conc">
-  <div class="modal">
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ── Modal: nova/editar concorrente ────────────────────── -->
+<div class="modal-overlay" id="modal-concorrente">
+  <div class="modal" style="max-width:540px">
     <div class="modal-header">
-      <h3 id="modal-titulo">Adicionar Concorrente</h3>
-      <button class="modal-close" onclick="fecharModal('modal-conc')">✕</button>
+      <h3 id="modal-conc-titulo" style="font-size:1.05rem">Nova Concorrente</h3>
+      <button class="modal-close" id="modal-conc-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="modal-body">
+
       <div class="form-group">
-        <label class="form-label">Escola *</label>
-        <input type="text" class="form-control" id="c-escola" placeholder="Nome da escola concorrente">
+        <label class="form-label">Nome da Escola Concorrente *</label>
+        <input type="text" class="form-control" id="fc-concorrente" placeholder="Ex: Aeroclube de São Paulo">
       </div>
-      <div class="form-group">
-        <label class="form-label">Vendedor / Fonte</label>
-        <input type="text" class="form-control" id="c-vendedor" placeholder="Ex: Adauto, Site, Indicação">
-      </div>
+
       <div class="form-group">
         <label class="form-label">Curso *</label>
-        <select class="form-control" id="c-curso">
-          <option value="">Selecione o curso</option>
-          <option>Piloto Privado Teórico</option>
-          <option>Piloto Privado Prático</option>
-          <option>Piloto Comercial/IFR Prático</option>
-          <option>Piloto Comercial Teórico</option>
-          <option>Piloto Comercial/IFR MLTE</option>
-          <option>INVA Teórico</option>
-          <option>INVA Prático</option>
-          <option>Aperfeiçoamento Contínuo</option>
-          <option>Adaptação de Instrutor Externo</option>
-          <option>SAFE Pilot Academy</option>
+        <select class="form-control" id="fc-curso">
+          <option value="" disabled selected>Selecione o curso</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Valor (R$) *</label>
-        <input type="number" class="form-control" id="c-valor" placeholder="0,00" step="0.01" min="0">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor à Vista *</label>
+          <input type="text" class="form-control" id="fc-valor-avista" placeholder="Ex: 35000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Parcelado</label>
+          <input type="text" class="form-control" id="fc-valor-parcelado" placeholder="Ex: 40000">
+        </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nº de Parcelas</label>
+          <input type="number" class="form-control" id="fc-parcelas" placeholder="Ex: 12" min="0" max="60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aeronave</label>
+          <input type="text" class="form-control" id="fc-aeronave" placeholder="Ex: Cessna 172">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" id="fc-obs" rows="3" placeholder="Informações adicionais, diferenciais, etc." style="resize:vertical"></textarea>
+      </div>
+
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModal('modal-conc')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-salvar">Salvar</button>
+      <button class="btn btn-ghost" id="modal-conc-cancelar">Cancelar</button>
+      <button class="btn btn-primary" id="btn-conc-salvar">Salvar</button>
     </div>
   </div>
 </div>
 
-<div id="toast-container" class="toast-container"></div>
+<!-- ── Modal: preço SAFE ──────────────────────────────────── -->
+<div class="modal-overlay" id="modal-preco-safe">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3 id="modal-safe-titulo" style="font-size:1.05rem">Preço SAFE</h3>
+      <button class="modal-close" id="modal-safe-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div style="background:rgba(96,192,191,.08);border:1px solid rgba(96,192,191,.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:20px">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--teal-dark);margin-bottom:2px">Curso</div>
+        <div id="fs-curso-display" style="font-weight:700;color:var(--navy);font-size:.95rem"></div>
+        <input type="hidden" id="fs-curso">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor à Vista *</label>
+          <input type="text" class="form-control" id="fs-valor-avista" placeholder="Ex: 35000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Parcelado</label>
+          <input type="text" class="form-control" id="fs-valor-parcelado" placeholder="Ex: 40000">
+        </div>
+      </div>
+
+      <div class="form-group" style="max-width:50%">
+        <label class="form-label">Nº de Parcelas</label>
+        <input type="number" class="form-control" id="fs-parcelas" placeholder="Ex: 12" min="0" max="60">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-safe-cancelar">Cancelar</button>
+      <button class="btn btn-teal" id="btn-safe-salvar">Salvar Preço SAFE</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
-<script>
-
-// ── Apps Script endpoint para concorrência ──────────────────
-// Reutiliza o mesmo API_URL via doGet/doPost action='concorrencia'
-
-let dados = [];
-let editandoId = null;
-
-async function apiGetConc() {
-  try {
-    const sessao = Auth.getSessao();
-    const url = `${CONFIG.API_URL}?action=listar-concorrencia&pac=${sessao.pac}&perfil=${sessao.perfil}`;
-    const res = await fetch(url);
-    return await res.json();
-  } catch { return { ok: false, error: 'Erro de conexão.' }; }
-}
-
-async function apiPostConc(action, dados) {
-  try {
-    const sessao = Auth.getSessao();
-    const body = JSON.stringify({ action, dados, pac: sessao.pac, perfil: sessao.perfil });
-    const res = await fetch(CONFIG.API_URL, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' }, body
-    });
-    return await res.json();
-  } catch { return { ok: false, error: 'Erro de conexão.' }; }
-}
-
-async function carregar() {
-  const res = await apiGetConc();
-  if (!res.ok) {
-    // Se ainda não há dados no Sheets, mostra vazio
-    renderTabela([]);
-    renderCards([]);
-    return;
-  }
-  dados = res.data || [];
-  renderTabela(dados);
-  renderCards(dados);
-}
-
-function renderCards(lista) {
-  const cont = document.getElementById('cards-escolas');
-  if (!cont) return;
-
-  // Agrupa por escola
-  const escolas = {};
-  lista.forEach(r => {
-    if (!escolas[r.escola]) escolas[r.escola] = { total: 0, cursos: 0 };
-    escolas[r.escola].total += Number(r.valor) || 0;
-    escolas[r.escola].cursos++;
-  });
-
-  if (!Object.keys(escolas).length) {
-    cont.innerHTML = '';
-    return;
-  }
-
-  cont.innerHTML = Object.entries(escolas).map(([nome, d]) => `
-    <div class="kpi-card">
-      <div class="kpi-label">${nome}</div>
-      <div class="kpi-value" style="font-size:1.3rem">${formatBRL(d.total / d.cursos)}</div>
-      <div class="kpi-sub">Ticket médio · ${d.cursos} curso${d.cursos > 1 ? 's' : ''}</div>
-      <div class="kpi-icon blue">◐</div>
-    </div>
-  `).join('');
-}
-
-function renderTabela(lista) {
-  const busca = document.getElementById('busca')?.value?.toLowerCase() || '';
-  const filtrado = busca
-    ? lista.filter(r =>
-        (r.escola || '').toLowerCase().includes(busca) ||
-        (r.curso  || '').toLowerCase().includes(busca))
-    : lista;
-
-  const tbody = document.getElementById('tabela-conc');
-  if (!tbody) return;
-
-  if (!filtrado.length) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
-      <div class="icon">◐</div>
-      <p>Nenhum dado cadastrado ainda.<br>Clique em "+ Adicionar" para começar.</p>
-    </div></td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtrado.map(r => `
-    <tr>
-      <td class="col-escola" data-label="Escola"><strong>${r.escola || '—'}</strong></td>
-      <td class="col-vendedor" data-label="Vendedor / Fonte">${r.vendedor || '—'}</td>
-      <td class="col-curso" data-label="Curso">${r.curso || '—'}</td>
-      <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy)">${formatBRL(r.valor)}</td>
-      <td data-label="Ação" style="display:flex;gap:6px">
-        ${Auth.podeEditar() ? `
-          <button class="btn btn-ghost btn-sm btn-icon" onclick="editar('${r.id}')" title="Editar">✎</button>
-          <button class="btn btn-ghost btn-sm btn-icon" onclick="excluir('${r.id}')" title="Excluir" style="color:var(--danger)">✕</button>
-        ` : ''}
-      </td>
-    </tr>
-  `).join('');
-}
-
-function abrirForm(item = null) {
-  if (!Auth.podeEditar()) {
-    toast('Este acesso é somente leitura.', 'warning');
-    return;
-  }
-
-  editandoId = item ? item.id : null;
-  document.getElementById('modal-titulo').textContent = item ? 'Editar Concorrente' : 'Adicionar Concorrente';
-  document.getElementById('c-escola').value   = item?.escola   || '';
-  document.getElementById('c-vendedor').value = item?.vendedor || '';
-  document.getElementById('c-curso').value    = item?.curso    || '';
-  document.getElementById('c-valor').value    = item?.valor    || '';
-  abrirModal('modal-conc');
-}
-
-function editar(id) {
-  const item = dados.find(r => r.id === id);
-  if (item) abrirForm(item);
-}
-
-async function excluir(id) {
-  if (!Auth.podeEditar()) {
-    toast('Este acesso é somente leitura.', 'warning');
-    return;
-  }
-
-  if (!confirm('Remover este registro?')) return;
-  const res = await apiPostConc('excluir-concorrencia', { id });
-  if (res.ok) { toast('Removido!', 'success'); await carregar(); }
-  else toast(res.error || 'Erro ao remover.', 'error');
-}
-
-document.getElementById('btn-novo')?.addEventListener('click', () => abrirForm());
-
-document.getElementById('btn-salvar')?.addEventListener('click', async () => {
-  if (!Auth.podeEditar()) {
-    toast('Este acesso é somente leitura.', 'warning');
-    return;
-  }
-
-  const btn = document.getElementById('btn-salvar');
-  const dadosForm = {
-    id:       editandoId,
-    escola:   document.getElementById('c-escola').value.trim(),
-    vendedor: document.getElementById('c-vendedor').value.trim(),
-    curso:    document.getElementById('c-curso').value,
-    valor:    document.getElementById('c-valor').value
-  };
-
-  if (!dadosForm.escola || !dadosForm.curso || !dadosForm.valor) {
-    toast('Escola, curso e valor são obrigatórios.', 'warning');
-    return;
-  }
-
-  btnLoading(btn, true);
-  const action = editandoId ? 'editar-concorrencia' : 'criar-concorrencia';
-  const res = await apiPostConc(action, dadosForm);
-  btnLoading(btn, false);
-
-  if (res.ok) {
-    toast(editandoId ? 'Atualizado!' : 'Adicionado!', 'success');
-    fecharModal('modal-conc');
-    await carregar();
-  } else {
-    toast(res.error || 'Erro ao salvar.', 'error');
-  }
-});
-
-document.getElementById('busca')?.addEventListener('input', () => renderTabela(dados));
-
-// Sidebar
-document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('collapsed');
-  document.getElementById('main').classList.toggle('sidebar-collapsed');
-  const t = document.getElementById('sidebar-toggle');
-  t.innerHTML = document.getElementById('sidebar').classList.contains('collapsed') ? '›' : '‹';
-});
-document.getElementById('hamburger')?.addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('mobile-open');
-  document.getElementById('sidebar-overlay').classList.toggle('active');
-});
-document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('sidebar-overlay').classList.remove('active');
-});
-document.addEventListener('DOMContentLoaded', () => {
-  Auth.proteger(true);
-  Auth.preencherUI();
-  carregar();
-});
-</script>
+<script src="js/concorrencia.js"></script>
 </body>
 </html>
