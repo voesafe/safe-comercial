@@ -1,7 +1,7 @@
 // ============================================================
 // Auth.gs — Autenticação e gestão de usuários
 // SAFE Escola de Aviação | Dashboard Comercial
-// Login por e-mail + senha (atualizado)
+// Login por e-mail (coluna D = row[3])
 // ============================================================
 
 /**

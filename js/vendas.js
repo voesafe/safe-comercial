@@ -15,6 +15,7 @@ const Vendas = {
   async init() {
     Auth.proteger();
     Auth.preencherUI();
+    this.setLoadingTabela(true); // skeleton imediato
     await this.carregarPacs();
     this.initFiltros();
     this.initForm();
@@ -27,9 +28,7 @@ const Vendas = {
     if (!campoPac) return;
 
     const fallback = Array.from(campoPac.options).map(option => ({
-      nome: option.textContent.trim(),
-      pac: option.value,
-      perfil: 'pac'
+      nome: option.textContent.trim(), pac: option.value, perfil: 'pac'
     }));
 
     try {
@@ -37,9 +36,7 @@ const Vendas = {
       this.pacs = res.ok && Array.isArray(res.data) && res.data.length
         ? res.data.filter(u => u.pac && !Auth.perfilSomenteLeitura(u.perfil))
         : fallback;
-    } catch {
-      this.pacs = fallback;
-    }
+    } catch { this.pacs = fallback; }
 
     this.preencherSelectPacs();
     this.preencherFiltroPacs();
@@ -48,52 +45,34 @@ const Vendas = {
   preencherSelectPacs() {
     const campoPac = document.getElementById('f-pac');
     if (!campoPac || !this.pacs.length) return;
-
     const valorAtual = campoPac.value;
     campoPac.innerHTML = '';
-
-    this.pacs.forEach(usuario => {
-      const option = document.createElement('option');
-      option.value = usuario.pac;
-      option.textContent = usuario.nome && usuario.nome !== usuario.pac
-        ? `${usuario.nome} (${usuario.pac})`
-        : usuario.pac;
-      campoPac.appendChild(option);
+    this.pacs.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.pac;
+      opt.textContent = u.nome && u.nome !== u.pac ? `${u.nome} (${u.pac})` : u.pac;
+      campoPac.appendChild(opt);
     });
-
-    if (valorAtual && this.pacs.some(usuario => usuario.pac === valorAtual)) {
-      campoPac.value = valorAtual;
-    }
+    if (valorAtual && this.pacs.some(u => u.pac === valorAtual)) campoPac.value = valorAtual;
   },
 
   preencherFiltroPacs() {
     const filtro = document.getElementById('filtro-pac-vendas');
     if (!filtro) return;
-
-    if (!Auth.eAdmin()) {
-      filtro.style.display = 'none';
-      return;
-    }
+    if (!Auth.eAdmin()) { filtro.style.display = 'none'; return; }
 
     const valorAtual = filtro.value || this.filtroPac;
     const pacs = [...new Map(
-      this.pacs
-        .filter(usuario => usuario.pac)
-        .map(usuario => [usuario.pac, usuario.pac])
+      this.pacs.filter(u => u.pac).map(u => [u.pac, u.pac])
     ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
     filtro.innerHTML = '<option value="">Todos os PACs</option>';
     pacs.forEach(pac => {
-      const option = document.createElement('option');
-      option.value = pac;
-      option.textContent = pac;
-      filtro.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = pac; opt.textContent = pac;
+      filtro.appendChild(opt);
     });
-
-    if (valorAtual && pacs.includes(valorAtual)) {
-      filtro.value = valorAtual;
-      this.filtroPac = valorAtual;
-    }
+    if (valorAtual && pacs.includes(valorAtual)) { filtro.value = valorAtual; this.filtroPac = valorAtual; }
   },
 
   initFiltros() {
@@ -101,69 +80,43 @@ const Vendas = {
     const selAno = document.getElementById('sel-ano');
 
     if (selMes) {
-      selMes.value = String(this.mesFiltro); // abre no mês atual
-      selMes.addEventListener('change', () => {
-        this.mesFiltro = selMes.value;
-        this.carregar();
-      });
+      selMes.value = String(this.mesFiltro);
+      selMes.addEventListener('change', () => { this.mesFiltro = selMes.value; this.carregar(); });
     }
     if (selAno) {
       selAno.value = this.anoFiltro;
-      selAno.addEventListener('change', () => {
-        this.anoFiltro = selAno.value;
-        this.carregar();
-      });
+      selAno.addEventListener('change', () => { this.anoFiltro = selAno.value; this.carregar(); });
     }
-
-    document.getElementById('filtro-pac-vendas')?.addEventListener('change', e => {
-      this.filtroPac = e.target.value;
-      this.renderTabela();
-    });
-
-    document.getElementById('busca')?.addEventListener('input', e => {
-      this.renderTabela(e.target.value);
-    });
+    document.getElementById('filtro-pac-vendas')?.addEventListener('change', e => { this.filtroPac = e.target.value; this.renderTabela(); });
+    document.getElementById('busca')?.addEventListener('input', e => { this.renderTabela(e.target.value); });
   },
 
   initForm() {
-    document.getElementById('btn-nova-venda')?.addEventListener('click', () => {
-      this.abrirForm();
-    });
-    document.getElementById('modal-close')?.addEventListener('click', () => {
-      fecharModal('modal-venda');
-    });
-    document.getElementById('modal-cancelar')?.addEventListener('click', () => {
-      fecharModal('modal-venda');
-    });
-    document.getElementById('btn-salvar')?.addEventListener('click', () => {
-      this.salvar();
-    });
+    document.getElementById('btn-nova-venda')?.addEventListener('click', () => this.abrirForm());
+    document.getElementById('modal-close')?.addEventListener('click',    () => fecharModal('modal-venda'));
+    document.getElementById('modal-cancelar')?.addEventListener('click', () => fecharModal('modal-venda'));
+    document.getElementById('btn-salvar')?.addEventListener('click',     () => this.salvar());
   },
 
   async carregar() {
     this.setLoadingTabela(true);
     const res = await API.getVendas(this.mesFiltro || null, this.anoFiltro);
 
-    if (!res.ok) {
-      toast(res.error || 'Erro ao carregar vendas.', 'error');
-      this.setLoadingTabela(false);
-      return;
-    }
+    if (!res.ok) { toast(res.error || 'Erro ao carregar vendas.', 'error'); this.setLoadingTabela(false); return; }
 
     this.dados = this.ordenarPorDataDesc(res.data || []);
     this.renderTabela();
-    this.setLoadingTabela(false);
   },
 
   timestampVenda(venda) {
-    const data = venda?.data ? new Date(venda.data).getTime() : 0;
-    return Number.isFinite(data) ? data : 0;
+    const d = venda?.data ? new Date(venda.data).getTime() : 0;
+    return Number.isFinite(d) ? d : 0;
   },
 
   ordenarPorDataDesc(lista) {
     return [...lista].sort((a, b) => {
-      const dataDiff = this.timestampVenda(b) - this.timestampVenda(a);
-      if (dataDiff !== 0) return dataDiff;
+      const diff = this.timestampVenda(b) - this.timestampVenda(a);
+      if (diff !== 0) return diff;
       return String(b.id || '').localeCompare(String(a.id || ''));
     });
   },
@@ -173,18 +126,14 @@ const Vendas = {
     if (!tbody) return;
 
     let lista = this.ordenarPorDataDesc(this.dados);
-
-    if (Auth.eAdmin() && this.filtroPac) {
-      lista = lista.filter(v => String(v.pac || '') === String(this.filtroPac));
-    }
-
+    if (Auth.eAdmin() && this.filtroPac) lista = lista.filter(v => String(v.pac || '') === String(this.filtroPac));
     if (busca.trim()) {
       const q = busca.toLowerCase();
       lista = lista.filter(v =>
-        (v.nome   || '').toLowerCase().includes(q) ||
-        (v.curso  || '').toLowerCase().includes(q) ||
-        (v.email  || '').toLowerCase().includes(q) ||
-        (v.pac    || '').toLowerCase().includes(q)
+        (v.nome  || '').toLowerCase().includes(q) ||
+        (v.curso || '').toLowerCase().includes(q) ||
+        (v.email || '').toLowerCase().includes(q) ||
+        (v.pac   || '').toLowerCase().includes(q)
       );
     }
 
@@ -193,13 +142,20 @@ const Vendas = {
       tbody.innerHTML = `
         <tr><td colspan="8">
           <div class="empty-state">
-            <div class="icon">◎</div>
+            <div class="icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4">
+                <path d="M4 3v18l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V3l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+                <path d="M8 8h8M8 12h8M8 16h5"/>
+              </svg>
+            </div>
             <p>Nenhuma venda encontrada</p>
           </div>
         </td></tr>`;
       return;
     }
 
+    // Fade-in suave ao renderizar
+    tbody.style.opacity = '0';
     tbody.innerHTML = lista.map(v => `
       <tr>
         <td data-label="Data">${formatData(v.data)}</td>
@@ -207,11 +163,20 @@ const Vendas = {
         <td data-label="Cliente">${v.nome || '—'}</td>
         <td class="col-curso" data-label="Curso">${v.curso || '—'}</td>
         <td class="col-origem" data-label="Origem">${v.origem || '—'}</td>
-        <td class="col-lead" data-label="Lead Novo"><span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span></td>
+        <td class="col-lead" data-label="Lead Novo">
+          <span class="badge ${v.leadNovo === 'Sim' || v.leadNovo === 'SIM' ? 'badge-green' : 'badge-navy'}">${v.leadNovo || '—'}</span>
+        </td>
         <td class="col-valor" data-label="Valor" style="text-align:right;font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v.valor)}</td>
-        <td data-label="Ação">${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">✎</button>` : ''}</td>
+        <td data-label="Ação">${Auth.podeEditar() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="Vendas.editar('${v.id}')" title="Editar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>` : ''}</td>
       </tr>
     `).join('');
+
+    requestAnimationFrame(() => {
+      tbody.style.transition = 'opacity .25s';
+      tbody.style.opacity = '1';
+    });
 
     this.atualizarContador(lista);
   },
@@ -223,15 +188,10 @@ const Vendas = {
   },
 
   abrirForm(venda = null) {
-    if (!Auth.podeEditar()) {
-      toast('Este acesso é somente leitura.', 'warning');
-      return;
-    }
+    if (!Auth.podeEditar()) { toast('Este acesso é somente leitura.', 'warning'); return; }
 
     this.editandoId = venda ? venda.id : null;
-
-    document.getElementById('modal-titulo').textContent =
-      venda ? 'Editar Venda' : 'Nova Venda';
+    document.getElementById('modal-titulo').textContent = venda ? 'Editar Venda' : 'Nova Venda';
 
     if (venda) {
       document.getElementById('f-data').value         = venda.data        || '';
@@ -248,24 +208,19 @@ const Vendas = {
       document.getElementById('f-lead-novo').value    = venda.leadNovo    || 'Não';
       document.getElementById('f-quem-comprou').value = venda.quemComprou || '';
     } else {
-      document.getElementById('f-data').value         = new Date().toISOString().split('T')[0];
-      document.getElementById('f-pac').value          = Auth.eAdmin()
-        ? (this.pacs[0]?.pac || 'Thiago')
-        : Auth.getPac();
-      document.getElementById('f-nome').value         = '';
-      document.getElementById('f-sexo').value         = '';
-      document.getElementById('f-nascimento').value   = '';
-      document.getElementById('f-cidade').value       = '';
-      document.getElementById('f-estado').value       = '';
-      document.getElementById('f-origem').value       = '';
-      document.getElementById('f-curso').value        = '';
-      document.getElementById('f-email').value        = '';
-      document.getElementById('f-valor').value        = '';
-      document.getElementById('f-lead-novo').value    = 'Não';
+      ['f-nome','f-nascimento','f-cidade','f-email','f-valor'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('f-data').value       = new Date().toISOString().split('T')[0];
+      document.getElementById('f-pac').value        = Auth.eAdmin() ? (this.pacs[0]?.pac || '') : Auth.getPac();
+      document.getElementById('f-sexo').value       = '';
+      document.getElementById('f-estado').value     = '';
+      document.getElementById('f-origem').value     = '';
+      document.getElementById('f-curso').value      = '';
+      document.getElementById('f-lead-novo').value  = 'Não';
       document.getElementById('f-quem-comprou').value = '';
     }
 
-    // PAC travado para não-admin
     const campoPac = document.getElementById('f-pac');
     if (campoPac) {
       campoPac.disabled = !Auth.eAdmin();
@@ -273,6 +228,7 @@ const Vendas = {
     }
 
     abrirModal('modal-venda');
+    setTimeout(() => document.getElementById('f-nome')?.focus(), 150);
   },
 
   async editar(id) {
@@ -281,10 +237,7 @@ const Vendas = {
   },
 
   async salvar() {
-    if (!Auth.podeEditar()) {
-      toast('Este acesso é somente leitura.', 'warning');
-      return;
-    }
+    if (!Auth.podeEditar()) { toast('Este acesso é somente leitura.', 'warning'); return; }
 
     const btn = document.getElementById('btn-salvar');
     btnLoading(btn, true);
@@ -292,9 +245,7 @@ const Vendas = {
     const dados = {
       id:          this.editandoId,
       data:        document.getElementById('f-data').value,
-      pac:         Auth.eAdmin()
-                     ? document.getElementById('f-pac').value
-                     : Auth.getPac(),
+      pac:         Auth.eAdmin() ? document.getElementById('f-pac').value : Auth.getPac(),
       nome:        document.getElementById('f-nome').value,
       sexo:        document.getElementById('f-sexo').value,
       nascimento:  document.getElementById('f-nascimento').value,
@@ -310,14 +261,10 @@ const Vendas = {
 
     if (!dados.data || !dados.nome || !dados.valor || !dados.curso) {
       toast('Data, nome, curso e valor são obrigatórios.', 'warning');
-      btnLoading(btn, false);
-      return;
+      btnLoading(btn, false); return;
     }
 
-    const res = this.editandoId
-      ? await API.editarVenda(dados)
-      : await API.criarVenda(dados);
-
+    const res = this.editandoId ? await API.editarVenda(dados) : await API.criarVenda(dados);
     btnLoading(btn, false);
 
     if (res.ok) {
@@ -329,10 +276,25 @@ const Vendas = {
     }
   },
 
+  // Skeleton animado na tabela
   setLoadingTabela(on) {
     const tbody = document.getElementById('tabela-vendas');
-    if (on && tbody) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>`;
+    if (!tbody) return;
+    if (!on) return;
+
+    const cols = Auth.eAdmin() ? 8 : 7;
+    const shimmer = `<td><div style="height:13px;border-radius:4px;background:linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 50%,var(--gray-100) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div></td>`;
+    tbody.innerHTML = Array.from({ length: 7 }, (_, i) => `
+      <tr class="sk-row" style="opacity:${1 - i * 0.1}">
+        ${Array.from({ length: cols }, () => shimmer).join('')}
+      </tr>
+    `).join('');
+
+    if (!document.getElementById('shimmer-kf')) {
+      const s = document.createElement('style');
+      s.id = 'shimmer-kf';
+      s.textContent = '@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}';
+      document.head.appendChild(s);
     }
   },
 
@@ -348,14 +310,8 @@ const Vendas = {
       main.classList.toggle('sidebar-collapsed');
       toggle.innerHTML = sidebar.classList.contains('collapsed') ? '›' : '‹';
     });
-    hamb?.addEventListener('click', () => {
-      sidebar.classList.toggle('mobile-open');
-      overlay.classList.toggle('active');
-    });
-    overlay?.addEventListener('click', () => {
-      sidebar.classList.remove('mobile-open');
-      overlay.classList.remove('active');
-    });
+    hamb?.addEventListener('click', () => { sidebar.classList.toggle('mobile-open'); overlay.classList.toggle('active'); });
+    overlay?.addEventListener('click', () => { sidebar.classList.remove('mobile-open'); overlay.classList.remove('active'); });
   }
 };
 

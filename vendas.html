@@ -9,6 +9,78 @@
   <link rel="apple-touch-icon" href="assets/img/logo.png">
   <link rel="stylesheet" href="css/safe-theme.css">
   <link rel="stylesheet" href="css/layout.css">
+  <style>
+    /* ── Fade-in de página ─────────────────────────────────── */
+    .page { animation: pageFadeIn .35s ease both; }
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Skeleton tabela ───────────────────────────────────── */
+    .sk-row td div {
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Seções do modal ───────────────────────────────────── */
+    .modal-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-title);
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--gray-400);
+      margin: 4px 0 16px;
+    }
+    .modal-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-100);
+    }
+    .modal-section-title svg { color: var(--blue); flex-shrink: 0; }
+
+    /* ── Tooltip sidebar collapsed ─────────────────────────── */
+    .nav-item { position: relative; }
+    .sidebar.collapsed .nav-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(100% + 14px);
+      top: 50%; transform: translateY(-50%);
+      background: var(--navy-deep);
+      color: var(--white);
+      font-size: .78rem; font-weight: 600;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0; transition: opacity .15s;
+      z-index: 300;
+      box-shadow: var(--shadow-md);
+    }
+    .sidebar.collapsed .nav-item::before {
+      content: '';
+      position: absolute;
+      left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-right-color: var(--navy-deep);
+      pointer-events: none;
+      opacity: 0; transition: opacity .15s; z-index: 300;
+    }
+    .sidebar.collapsed .nav-item:hover::after,
+    .sidebar.collapsed .nav-item:hover::before { opacity: 1; }
+  </style>
 </head>
 <body>
 
@@ -24,26 +96,26 @@
     <div class="sidebar-toggle" id="sidebar-toggle">‹</div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
-      <a href="dashboard.html" class="nav-item">
-        <span class="nav-icon">◈</span><span class="nav-label">Dashboard</span>
+      <a href="dashboard.html" class="nav-item" data-tooltip="Dashboard">
+        <span class="nav-icon"></span><span class="nav-label">Dashboard</span>
       </a>
-      <a href="vendas.html" class="nav-item active">
-        <span class="nav-icon">◎</span><span class="nav-label">Vendas</span>
+      <a href="vendas.html" class="nav-item active" data-tooltip="Vendas">
+        <span class="nav-icon"></span><span class="nav-label">Vendas</span>
       </a>
       <hr class="nav-divider" data-admin-only>
       <div class="nav-section-label" data-admin-only>Administração</div>
-      <a href="faturamento.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◉</span><span class="nav-label">Faturamento</span>
+      <a href="faturamento.html" class="nav-item" data-admin-only data-tooltip="Faturamento">
+        <span class="nav-icon"></span><span class="nav-label">Faturamento</span>
       </a>
-      <a href="concorrencia.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◐</span><span class="nav-label">Concorrência</span>
+      <a href="concorrencia.html" class="nav-item" data-admin-only data-tooltip="Concorrência">
+        <span class="nav-icon"></span><span class="nav-label">Concorrência</span>
       </a>
-      <a href="admin.html" class="nav-item" data-admin-only>
-        <span class="nav-icon">◑</span><span class="nav-label">Usuários</span>
+      <a href="admin.html" class="nav-item" data-admin-only data-tooltip="Usuários">
+        <span class="nav-icon"></span><span class="nav-label">Usuários</span>
       </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="sidebar-user" id="btn-logout">
+      <div class="sidebar-user" id="sidebar-user-current">
         <div class="sidebar-avatar">?</div>
         <div class="sidebar-user-info">
           <div class="sidebar-user-name">Carregando...</div>
@@ -80,7 +152,10 @@
             <option value="2026" selected>2026</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="btn-nova-venda" data-write-only>+ Nova Venda</button>
+        <button class="btn btn-primary" id="btn-nova-venda" data-write-only>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Venda
+        </button>
       </div>
     </div>
 
@@ -111,9 +186,7 @@
                 <th style="width:48px"></th>
               </tr>
             </thead>
-            <tbody id="tabela-vendas">
-              <tr><td colspan="8" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>
-            </tbody>
+            <tbody id="tabela-vendas"></tbody>
           </table>
         </div>
       </div>
@@ -121,14 +194,22 @@
   </main>
 </div>
 
-<!-- Modal Venda -->
+<!-- ── Modal Venda ────────────────────────────────────────── -->
 <div class="modal-overlay" id="modal-venda">
-  <div class="modal">
+  <div class="modal" style="max-width:600px">
     <div class="modal-header">
-      <h3 id="modal-titulo">Nova Venda</h3>
-      <button class="modal-close" id="modal-close">✕</button>
+      <h3 id="modal-titulo" style="font-size:1.05rem">Nova Venda</h3>
+      <button class="modal-close" id="modal-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="modal-body">
+
+      <!-- Seção: Dados da Venda -->
+      <div class="modal-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v18l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V3l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        Dados da Venda
+      </div>
 
       <div class="form-row">
         <div class="form-group">
@@ -136,7 +217,7 @@
           <input type="date" class="form-control" id="f-data">
         </div>
         <div class="form-group">
-          <label class="form-label">PAC (Consultor)</label>
+          <label class="form-label">Consultor (PAC)</label>
           <select class="form-control" id="f-pac">
             <option value="Thiago">Thiago</option>
             <option value="Marlon">Marlon</option>
@@ -146,8 +227,69 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Nome Completo do Cliente *</label>
-        <input type="text" class="form-control" id="f-nome" placeholder="Nome completo">
+        <label class="form-label">Curso / Produto Comprado *</label>
+        <select class="form-control" id="f-curso">
+          <option value="">Selecione o curso</option>
+          <option>Piloto Privado Teórico</option>
+          <option>Piloto Privado Prático</option>
+          <option>Piloto Comercial/IFR Prático</option>
+          <option>Piloto Comercial Teórico</option>
+          <option>Piloto Comercial/IFR MLTE</option>
+          <option>INVA Teórico</option>
+          <option>INVA Prático</option>
+          <option>Aperfeiçoamento Contínuo</option>
+          <option>Adaptação de Instrutor Externo</option>
+          <option>SAFE Pilot Academy</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor da Compra (R$) *</label>
+          <input type="number" class="form-control" id="f-valor" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Origem do Lead</label>
+          <select class="form-control" id="f-origem">
+            <option value="">Selecione</option>
+            <option>Instagram</option><option>Google</option><option>Site</option>
+            <option>Facebook</option><option>Indicação</option>
+            <option>Aluno Interno</option><option>YouTube</option>
+            <option>WhatsApp</option><option>Outros</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lead Novo?</label>
+          <select class="form-control" id="f-lead-novo">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quem Comprou</label>
+          <select class="form-control" id="f-quem-comprou">
+            <option value="">—</option>
+            <option value="Aluno">Aluno</option>
+            <option value="Pai">Pai</option>
+            <option value="Mãe">Mãe</option>
+            <option value="Pai e Mãe">Pai e Mãe</option>
+            <option value="Responsável">Responsável</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Seção: Dados do Cliente -->
+      <div class="modal-section-title" style="margin-top:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Dados do Cliente
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nome Completo *</label>
+        <input type="text" class="form-control" id="f-nome" placeholder="Nome completo do cliente">
       </div>
 
       <div class="form-row">
@@ -163,6 +305,11 @@
           <label class="form-label">Data de Nascimento</label>
           <input type="date" class="form-control" id="f-nascimento">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" class="form-control" id="f-email" placeholder="email@exemplo.com">
       </div>
 
       <div class="form-row">
@@ -185,65 +332,6 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Origem do Lead</label>
-        <select class="form-control" id="f-origem">
-          <option value="">Selecione</option>
-          <option>Instagram</option><option>Google</option><option>Site</option>
-          <option>Facebook</option><option>Indicação</option>
-          <option>Aluno Interno</option><option>YouTube</option>
-          <option>WhatsApp</option><option>Outros</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Curso / Produto Comprado *</label>
-        <select class="form-control" id="f-curso">
-          <option value="">Selecione o curso</option>
-          <option>Piloto Privado Teórico</option>
-          <option>Piloto Privado Prático</option>
-          <option>Piloto Comercial/IFR Prático</option>
-          <option>Piloto Comercial Teórico</option>
-          <option>Piloto Comercial/IFR MLTE</option>
-          <option>INVA Teórico</option>
-          <option>INVA Prático</option>
-          <option>Aperfeiçoamento Contínuo</option>
-          <option>Adaptação de Instrutor Externo</option>
-          <option>SAFE Pilot Academy</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">E-mail do Cliente</label>
-        <input type="email" class="form-control" id="f-email" placeholder="email@exemplo.com">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Valor da Compra (R$) *</label>
-          <input type="number" class="form-control" id="f-valor" placeholder="0,00" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Lead Novo?</label>
-          <select class="form-control" id="f-lead-novo">
-            <option value="Não">Não</option>
-            <option value="Sim">Sim</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Quem Comprou (se menor de idade)</label>
-        <select class="form-control" id="f-quem-comprou">
-          <option value="">—</option>
-          <option value="Aluno">Aluno</option>
-          <option value="Pai">Pai</option>
-          <option value="Mãe">Mãe</option>
-          <option value="Pai e Mãe">Pai e Mãe</option>
-          <option value="Responsável">Responsável</option>
-        </select>
-      </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="modal-cancelar">Cancelar</button>
@@ -261,9 +349,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-      if (!Auth.eAdmin()) {
-        document.getElementById('col-pac-header')?.remove();
-      }
+      if (!Auth.eAdmin()) document.getElementById('col-pac-header')?.remove();
     }, 100);
   });
 </script>
