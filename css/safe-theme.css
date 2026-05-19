@@ -490,109 +490,55 @@ h4 { font-size: 1rem; }
 /* Garante que nada vaze */
 *, *::before, *::after { box-sizing: border-box; }
 
-.table-wrapper {
-  overflow-x: hidden !important;
-  width: 100%;
-}
-
-.table {
-  width: 100%;
-  min-width: 0 !important;
-  table-layout: fixed;
-}
-
-/* Colunas com largura fixa */
-.table thead th:nth-child(1) { width: 100px; } /* Data */
-.table thead th:nth-child(2) { width: 90px;  } /* PAC */
-.table thead th:nth-child(3) { width: auto;  } /* Cliente — flex */
-.table thead th:nth-child(4) { width: 140px; } /* Curso */
-.table thead th:nth-child(5) { width: 110px; } /* Origem */
-.table thead th:nth-child(6) { width: 90px;  } /* Lead Novo */
-.table thead th:nth-child(7) { width: 110px; } /* Valor */
-.table thead th:nth-child(8) { width: 44px;  } /* Ação */
-
-/* Células truncam com reticências */
-.table tbody td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── 1200px: some Origem ──────────────────────────────────── */
-@media (max-width: 1200px) {
-  .table .col-origem,
-  .table th.col-origem { display: none; }
-}
-
-/* ── 960px: some Lead Novo ───────────────────────────────── */
-@media (max-width: 960px) {
-  .table .col-lead,
-  .table th.col-lead { display: none; }
-}
-
-/* ── 720px: some PAC ─────────────────────────────────────── */
-@media (max-width: 720px) {
-  .table .col-pac,
-  .table th.col-pac { display: none; }
-}
-
-/* ── 520px: some Curso ───────────────────────────────────── */
-@media (max-width: 520px) {
-  .table .col-curso,
-  .table th.col-curso { display: none; }
-}
-
 /* ============================================================
-   Tabela responsiva — sem scroll, sem truncamento
-   Colunas somem progressivamente conforme a tela diminui
+   Tabela — estratégia única, zoom-safe
+   Sem table-layout: fixed. Colunas fluem pelo conteúdo.
+   Colunas desnecessárias somem progressivamente.
    ============================================================ */
 
-/* Reset: tabela ocupa espaço disponível, sem forçar largura */
 .table-wrapper {
-  overflow: hidden !important;
+  overflow-x: auto;
   width: 100%;
+  border-radius: var(--radius-md);
 }
 
 .table {
   width: 100%;
-  table-layout: auto;
+  border-collapse: collapse;
+  font-size: .875rem;
+  table-layout: auto; /* deixa o browser calcular — zoom-safe */
 }
 
-/* Sem truncamento em nenhuma célula */
-.table tbody td,
 .table thead th {
+  white-space: nowrap;
+  padding: 12px 14px;
+}
+
+.table tbody td {
+  padding: 12px 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0; /* força ellipsis no table-layout:auto */
+}
+
+/* Cliente pode quebrar linha normalmente */
+.table tbody td:nth-child(3) {
   white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
+  max-width: none;
   word-break: break-word;
 }
 
-/* Apenas data e valor não quebram */
-.table td:first-child,
-.table th:first-child,
-.table td.col-valor,
-.table th.col-valor {
+/* Coluna de ação nunca trunca */
+.table tbody td:last-child {
   white-space: nowrap;
+  max-width: none;
+  overflow: visible;
 }
 
-/* ── Breakpoints: colunas somem, nunca truncam ─────────────── */
-
-/* < 1100px: some Origem */
-@media (max-width: 1100px) {
-  .col-origem { display: none !important; }
-}
-
-/* < 860px: some Lead Novo */
-@media (max-width: 860px) {
-  .col-lead { display: none !important; }
-}
-
-/* < 680px: some PAC */
-@media (max-width: 680px) {
-  .col-pac { display: none !important; }
-}
-
-/* < 500px: some Curso */
-@media (max-width: 500px) {
-  .col-curso { display: none !important; }
-}
+/* Breakpoints: colunas somem progressivamente */
+@media (max-width: 1100px) { .col-origem  { display: none !important; } }
+@media (max-width:  860px) { .col-lead    { display: none !important; } }
+@media (max-width:  680px) { .col-pac     { display: none !important; } }
+@media (max-width:  500px) { .col-curso   { display: none !important; } }
