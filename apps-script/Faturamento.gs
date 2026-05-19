@@ -223,6 +223,23 @@ function salvarFaturamento(mes, ano, canal, valor) {
 }
 
 /**
+ * Exclui um registro de faturamento pelo ID
+ */
+function excluirFaturamento(id) {
+  var sheet = getSheet(SHEETS.FATURAMENTO);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) {
+      sheet.deleteRow(i + 1);
+      return { excluido: true };
+    }
+  }
+
+  return { excluido: false, erro: 'Registro não encontrado' };
+}
+
+/**
  * Resumo consolidado de faturamento por mes (todos os canais)
  */
 function resumoFaturamento(ano) {

@@ -106,6 +106,11 @@ function doPost(e) {
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
         return jsonSuccess(salvarFaturamento(dados.mes, dados.ano, dados.canal, dados.valor));
 
+      case 'excluir-faturamento':
+        if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');
+        if (!dados.id) return jsonError('ID obrigatório');
+        return jsonSuccess(excluirFaturamento(dados.id));
+
       // ── Usuários ───────────────────────────────────────────
       case 'criar-usuario':
         if (!perfilEhAdminCompleto(perfil)) return jsonError('Acesso negado');

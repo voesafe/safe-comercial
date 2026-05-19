@@ -11,6 +11,25 @@
   <link rel="stylesheet" href="css/safe-theme.css">
   <link rel="stylesheet" href="css/layout.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .btn-acao {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      background: transparent;
+    }
+    .btn-acao:hover { transform: scale(1.1); }
+    .btn-editar-fat { color: var(--blue); }
+    .btn-editar-fat:hover { background: rgba(91,174,226,.12); }
+    .btn-excluir-fat { color: #e74c3c; }
+    .btn-excluir-fat:hover { background: rgba(231,76,60,.1); }
+  </style>
 </head>
 <body>
 
@@ -92,10 +111,11 @@
                 <th>Lito Academy</th>
                 <th>Vendas Comercial</th>
                 <th style="background:var(--navy-light)">Total</th>
+                <th style="width:80px;text-align:center" data-write-only></th>
               </tr>
             </thead>
             <tbody id="tbody-fat">
-              <tr><td colspan="7" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:40px">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -172,12 +192,14 @@ const MESES_LABELS = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MESES_CURTOS = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const CANAIS       = ['Lojinha','Safe Academy','Azul Pontos','Lito Academy','Vendas Comercial'];
+// Canais que compõem o Total (exclui Vendas Comercial, que é coluna informativa)
+const CANAIS_TOTAL = ['Lojinha','Safe Academy','Azul Pontos','Lito Academy'];
 const CORES        = ['#5BAEE2','#60C0BF','#1D2951','#80B8B8','#3d8cc4'];
 
 // ── Carregar ────────────────────────────────────────────────
 async function carregarFaturamento() {
   const tbody = document.getElementById('tbody-fat');
-  if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Carregando...</td></tr>`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding:32px">Carregando...</td></tr>`;
 
   const ano = document.getElementById('sel-ano').value;
   const res = await API.getResumoFaturamento(ano);
@@ -191,12 +213,27 @@ async function carregarFaturamento() {
     CANAIS.forEach(c => { resumoAtual[m][c] = 0; });
     if (res.data[m]) {
       CANAIS.forEach(c => { resumoAtual[m][c] = Number(res.data[m][c]) || 0; });
-      resumoAtual[m].total = Number(res.data[m].total) || 0;
+      // Total = soma apenas dos 4 canais manuais (não inclui Vendas Comercial)
+      resumoAtual[m].total = CANAIS_TOTAL.reduce((s, c) => s + (resumoAtual[m][c] || 0), 0);
     }
   }
 
+  // Carrega também os IDs dos registros para poder excluir
+  await carregarIdsRegistros(ano);
+
   renderTabelaFat(resumoAtual);
   renderChartFat(resumoAtual);
+}
+
+// Busca os registros com ID para mapear mes/canal → id (usado na exclusão)
+let registrosIds = {}; // { "mes-canal": id }
+async function carregarIdsRegistros(ano) {
+  registrosIds = {};
+  const res = await API.getFaturamento(null, ano);
+  if (!res.ok) return;
+  (res.data || []).forEach(r => {
+    registrosIds[`${r.mes}-${r.canal}`] = r.id;
+  });
 }
 
 // ── Tabela ──────────────────────────────────────────────────
@@ -204,42 +241,101 @@ function renderTabelaFat(dados) {
   const tbody = document.getElementById('tbody-fat');
   if (!tbody) return;
 
-  // Mostra todos os meses que têm qualquer valor (incluindo só Vendas Comercial)
+  const ehAdmin = Auth.eAdminCompleto();
+
+  // Mostra todos os meses que têm qualquer valor nos 4 canais manuais
   const linhas = [];
   for (let m = 1; m <= 12; m++) {
     const d = dados[m];
-    if (!d || d.total === 0) continue;
+    const temValor = CANAIS_TOTAL.some(c => d[c] > 0);
+    if (!d || !temValor) continue;
+
+    const acoes = ehAdmin ? `
+      <td style="white-space:nowrap;text-align:center">
+        <button class="btn-acao btn-editar-fat" onclick="abrirEdicaoMes(${m})" title="Editar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-acao btn-excluir-fat" onclick="confirmarExclusaoMes(${m})" title="Excluir lançamento">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </td>` : '<td></td>';
+
     linhas.push(`
       <tr>
         <td style="font-weight:600;white-space:nowrap">${MESES_LABELS[m]}</td>
         ${CANAIS.map(c => `<td style="white-space:nowrap">${d[c] ? formatBRL(d[c]) : '<span style="color:var(--gray-300)">—</span>'}</td>`).join('')}
         <td style="font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(d.total)}</td>
+        ${acoes}
       </tr>
     `);
   }
 
   if (!linhas.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:32px">
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding:32px">
       Nenhum dado para este ano
     </td></tr>`;
     return;
   }
 
-  // Linha de total anual
+  // Linha de total anual (soma apenas dos 4 canais manuais)
   const totaisCanais = CANAIS.map(c =>
     Object.values(dados).reduce((s, d) => s + (d[c] || 0), 0)
   );
-  const totalGeral = totaisCanais.reduce((s, v) => s + v, 0);
+  const totalGeral = CANAIS_TOTAL.map((c, i) => totaisCanais[CANAIS.indexOf(c)]).reduce((s, v) => s + v, 0);
 
   linhas.push(`
     <tr style="background:var(--off-white);border-top:2px solid var(--gray-200)">
       <td style="font-family:var(--font-title);font-weight:800;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500)">Total Anual</td>
       ${totaisCanais.map(v => `<td style="font-weight:700;color:var(--navy);white-space:nowrap">${formatBRL(v)}</td>`).join('')}
       <td style="font-family:var(--font-title);font-weight:800;color:var(--navy);white-space:nowrap">${formatBRL(totalGeral)}</td>
+      <td></td>
     </tr>
   `);
 
   tbody.innerHTML = linhas.join('');
+}
+
+// ── Editar mês pelo botão da tabela ────────────────────────
+function abrirEdicaoMes(mes) {
+  document.getElementById('fat-mes').value = mes;
+  document.getElementById('fat-ano').value = document.getElementById('sel-ano').value;
+
+  const d = resumoAtual[mes] || {};
+  document.getElementById('fat-lojinha').value = d['Lojinha']      || '';
+  document.getElementById('fat-academy').value = d['Safe Academy'] || '';
+  document.getElementById('fat-azul').value    = d['Azul Pontos']  || '';
+  document.getElementById('fat-lito').value    = d['Lito Academy'] || '';
+
+  abrirModal('modal-fat');
+}
+
+// ── Excluir lançamento de um mês ───────────────────────────
+function confirmarExclusaoMes(mes) {
+  const nomeMesLabel = MESES_LABELS[mes];
+  const ano = document.getElementById('sel-ano').value;
+  if (!confirm(`Excluir todos os lançamentos de ${nomeMesLabel}/${ano}? Esta ação não pode ser desfeita.`)) return;
+  excluirMes(mes, ano);
+}
+
+async function excluirMes(mes, ano) {
+  // Exclui cada canal que tiver ID registrado
+  const canaisParaExcluir = CANAIS_TOTAL.filter(c => registrosIds[`${mes}-${c}`]);
+  if (!canaisParaExcluir.length) {
+    toast('Nenhum registro encontrado para excluir.', 'warning');
+    return;
+  }
+
+  let ok = true;
+  for (const canal of canaisParaExcluir) {
+    const id = registrosIds[`${mes}-${canal}`];
+    const r = await API.excluirFaturamento(id);
+    if (!r.ok) { ok = false; toast(r.error || `Erro ao excluir ${canal}`, 'error'); break; }
+  }
+
+  if (ok) {
+    toast('Lançamento excluído com sucesso.', 'success');
+    await carregarFaturamento();
+  }
 }
 
 // ── Gráfico ─────────────────────────────────────────────────

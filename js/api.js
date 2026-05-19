@@ -89,7 +89,12 @@ const API = {
   async getResumoFaturamento(ano)    { return this.get('faturamento-resumo', { ano }); },
   async salvarFaturamento(mes, ano, canal, valor) {
     const r = await this.post('salvar-faturamento', { mes, ano, canal, valor });
-    if (r.ok) Cache.invalidarVendas();
+    if (r.ok) { Cache.invalidar('faturamento'); Cache.invalidarVendas(); }
+    return r;
+  },
+  async excluirFaturamento(id) {
+    const r = await this.post('excluir-faturamento', { id });
+    if (r.ok) { Cache.invalidar('faturamento'); Cache.invalidarVendas(); }
     return r;
   },
 

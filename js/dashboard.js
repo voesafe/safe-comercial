@@ -38,14 +38,20 @@ const Dashboard = {
   async carregar() {
     this.setLoading(true);
     try {
-      const res = await this._comTimeout(
-        API.getKPIs(this.mesFiltro, this.anoFiltro),
-        'Tempo limite excedido ao carregar os dados.'
-      );
-      if (!res.ok) { toast(res.error || 'Erro ao carregar dados.', 'error'); return; }
+      const [resKpi, resFat] = await Promise.all([
+        this._comTimeout(
+          API.getKPIs(this.mesFiltro, this.anoFiltro),
+          'Tempo limite excedido ao carregar os dados.'
+        ),
+        Auth.eAdmin()
+          ? API.getResumoFaturamento(this.anoFiltro || CONFIG.ANO_ATUAL)
+          : Promise.resolve(null)
+      ]);
 
-      const k = res.data;
-      this.renderKPIs(k);
+      if (!resKpi.ok) { toast(resKpi.error || 'Erro ao carregar dados.', 'error'); return; }
+
+      const k = resKpi.data;
+      this.renderKPIs(k, resFat);
       this.renderChartReceita(k.porMes);
       this.renderChartOrigens(k.origens);
       if (Auth.eAdmin()) this.renderChartPac(k.porPac);
@@ -70,7 +76,7 @@ const Dashboard = {
 
   // ── KPIs ───────────────────────────────────────────────────
 
-  renderKPIs(k) {
+  renderKPIs(k, resFat) {
     const set = (id, val) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -93,6 +99,38 @@ const Dashboard = {
 
     const cardTotalGeral = document.getElementById('kpi-total-geral-card');
     if (cardTotalGeral) cardTotalGeral.style.display = Auth.eAdmin() ? 'none' : 'flex';
+
+    // ── Card Receita Global (admin only) ───────────────────
+    const cardGlobal = document.getElementById('kpi-receita-global-card');
+    if (cardGlobal && Auth.eAdmin()) {
+      cardGlobal.style.display = 'flex';
+
+      // Calcula receita de faturamento do ano atual (apenas 4 canais manuais)
+      const CANAIS_FAT = ['Lojinha', 'Safe Academy', 'Azul Pontos', 'Lito Academy'];
+      let receitaFat = 0;
+      if (resFat && resFat.ok && resFat.data) {
+        const anoFiltro = this.anoFiltro || CONFIG.ANO_ATUAL;
+        // Se há filtro de mês, soma só aquele mês; senão, soma o ano todo
+        const meses = this.mesFiltro
+          ? [Number(this.mesFiltro)]
+          : Array.from({ length: 12 }, (_, i) => i + 1);
+
+        meses.forEach(m => {
+          const d = resFat.data[m];
+          if (!d) return;
+          CANAIS_FAT.forEach(c => { receitaFat += Number(d[c]) || 0; });
+        });
+      }
+
+      const receitaVendas = k.totalReceita || 0;
+      const receitaGlobal = receitaVendas + receitaFat;
+
+      set('kpi-receita-global', formatBRL(receitaGlobal));
+
+      const sub = document.getElementById('kpi-receita-global-sub');
+      if (sub) sub.innerHTML =
+        `<span style="font-size:.7rem;color:var(--gray-400)">Vendas ${formatBRL(receitaVendas)} · Fat. ${formatBRL(receitaFat)}</span>`;
+    }
 
     // Badges de variação (usa dados do mês anterior se disponível)
     if (k.variacao) {
