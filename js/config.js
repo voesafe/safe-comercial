@@ -38,7 +38,8 @@ const CONFIG = {
     'INVA Prático',
     'Aperfeiçoamento Contínuo',
     'Adaptação de Instrutor Externo',
-    'SAFE Pilot Academy'
+    'SAFE Pilot Academy',
+    'Curriculo de Solo'
   ],
 
   CANAIS_FATURAMENTO: [
